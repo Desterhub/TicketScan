@@ -92,7 +92,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <footer className="w-full max-w-7xl mx-auto px-6 py-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono gap-3 z-10">
-        <div>© {new Date().getFullYear()} TicketScan Forensic Terminal. All rights reserved.</div>
+        <div>© 2026 TicketScan Forensic Terminal. All rights reserved.</div>
         <div className="flex items-center gap-4">
           <span className="hover:text-slate-400 transition cursor-pointer">Privacy Protocol</span>
           <span>•</span>
