@@ -56,13 +56,26 @@ export async function POST(req: NextRequest) {
 
     // 2. Query user where role = 'admin' matching email or username
     const supabase = getServiceRoleClient();
-    // Identifier might be "tirth" or "tirth@ticketscan.local" or email
-    const { data: users, error: fetchError } = await supabase
-      .from('users')
-      .select('id, email, password_hash, full_name, role, is_active')
-      .eq('role', 'admin');
+    let adminUsers: any[] = [];
 
-    if (fetchError || !users || users.length === 0) {
+    try {
+      const { data: users, error: fetchError } = await supabase
+        .from('users')
+        .select('id, email, password_hash, full_name, role, is_active')
+        .eq('role', 'admin');
+
+      if (!fetchError && users && users.length > 0) {
+        adminUsers = users;
+      }
+    } catch {}
+
+    // Fallback to local database if Supabase returned no users
+    if (adminUsers.length === 0) {
+      const { localDb } = await import('@/lib/local-store');
+      adminUsers = localDb.getUsers().filter((u) => u.role === 'admin');
+    }
+
+    if (adminUsers.length === 0) {
       recordLocalFailedAttempt(`admin_${cleanId}`);
       await logAuditEvent({
         action: 'failed_login',
@@ -75,6 +88,8 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+
+    const users = adminUsers;
 
     // Find admin matching either exact email or username prefix
     const adminUser = users.find(

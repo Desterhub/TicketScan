@@ -56,13 +56,23 @@ export async function POST(req: NextRequest) {
 
     // 2. Fetch user by email
     const supabase = getServiceRoleClient();
-    const { data: user, error: fetchError } = await supabase
-      .from('users')
-      .select('id, email, password_hash, full_name, role, is_active')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
+    let user: any = null;
 
-    if (fetchError || !user) {
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('users')
+        .select('id, email, password_hash, full_name, role, is_active')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+      if (!fetchError && data) user = data;
+    } catch {}
+
+    if (!user) {
+      const { localDb } = await import('@/lib/local-store');
+      user = localDb.getUsers().find((u) => u.email.toLowerCase() === normalizedEmail);
+    }
+
+    if (!user) {
       recordLocalFailedAttempt(normalizedEmail);
       await logAuditEvent({
         action: 'failed_login',

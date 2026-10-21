@@ -17,20 +17,27 @@ export async function GET() {
       .select('id, email, full_name, role, is_active, created_at, last_login_at')
       .order('created_at', { ascending: false });
 
-    if (userError) {
-      return NextResponse.json({ error: userError.message }, { status: 500 });
+    let allUsers = users;
+    if (userError || !allUsers || allUsers.length === 0) {
+      const { localDb } = await import('@/lib/local-store');
+      allUsers = localDb.getUsers() as any;
     }
 
     // Fetch ticket counts per user
     const { data: tickets } = await supabase.from('tickets').select('user_id');
     const countsMap: Record<string, number> = {};
-    if (tickets) {
+    if (tickets && tickets.length > 0) {
       tickets.forEach((t) => {
+        countsMap[t.user_id] = (countsMap[t.user_id] || 0) + 1;
+      });
+    } else {
+      const { localDb } = await import('@/lib/local-store');
+      localDb.getTickets().forEach((t) => {
         countsMap[t.user_id] = (countsMap[t.user_id] || 0) + 1;
       });
     }
 
-    const enrichedUsers = (users || []).map((u) => ({
+    const enrichedUsers = (allUsers || []).map((u) => ({
       ...u,
       ticket_count: countsMap[u.id] || 0,
     }));

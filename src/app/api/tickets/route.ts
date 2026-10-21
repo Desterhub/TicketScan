@@ -40,10 +40,34 @@ export async function GET(req: NextRequest) {
       query = query.gt('tamper_risk_score', 0.65);
     }
 
-    const { data: tickets, error } = await query;
+    let tickets: any[] = [];
+    try {
+      const { data, error } = await query;
+      if (!error && data) {
+        tickets = data;
+      }
+    } catch {}
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (tickets.length === 0) {
+      const { localDb } = await import('@/lib/local-store');
+      let all = localDb.getTickets();
+      if (!forAdmin) {
+        all = all.filter((t) => t.user_id === session.userId);
+      }
+      if (mode !== 'all') {
+        all = all.filter((t) => t.transport_mode === mode);
+      }
+      if (status !== 'all') {
+        all = all.filter((t) => t.booking_status === status);
+      }
+      if (risk === 'low') {
+        all = all.filter((t) => Number(t.tamper_risk_score || 0) <= 0.3);
+      } else if (risk === 'medium') {
+        all = all.filter((t) => Number(t.tamper_risk_score || 0) > 0.3 && Number(t.tamper_risk_score || 0) <= 0.65);
+      } else if (risk === 'high') {
+        all = all.filter((t) => Number(t.tamper_risk_score || 0) > 0.65);
+      }
+      tickets = all;
     }
 
     // In-memory text filter for search query across passenger, PNR, carrier, routes

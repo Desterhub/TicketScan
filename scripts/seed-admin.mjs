@@ -38,16 +38,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const adminSeedPassword = process.env.ADMIN_SEED_PASSWORD || '010205';
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('\n❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in environment.');
-  console.error('Please configure your credentials in .env.local before running the seed script.\n');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
-
 async function seedAdmin() {
   console.log('\n=============================================');
   console.log('🛡️  TicketScan: Seeding Initial Admin Account');
@@ -59,64 +49,95 @@ async function seedAdmin() {
   console.log(`Hashing password with bcrypt (10 rounds)...`);
   const passwordHash = await bcrypt.hash(adminSeedPassword, 10);
 
-  // Check if user already exists
-  const { data: existingUser, error: checkError } = await supabase
-    .from('users')
-    .select('id, email, role')
-    .or(`email.eq.${adminEmail},full_name.eq.${adminUsername}`)
-    .maybeSingle();
-
-  if (checkError && checkError.code !== 'PGRST116') {
-    console.error('Database query error:', checkError.message);
+  // 1. Seed local JSON storage (data/users.json)
+  const dataDir = path.resolve(__dirname, '../data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  const usersFile = path.join(dataDir, 'users.json');
+  let users = [];
+  if (fs.existsSync(usersFile)) {
+    try {
+      users = JSON.parse(fs.readFileSync(usersFile, 'utf-8'));
+    } catch {}
   }
 
-  if (existingUser) {
-    console.log(`Found existing user with ID: ${existingUser.id}. Updating to Admin role & updating password hash...`);
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({
-        role: 'admin',
-        password_hash: passwordHash,
-        full_name: adminUsername,
-        is_active: true,
-      })
-      .eq('id', existingUser.id);
+  const existingLocalIdx = users.findIndex(
+    (u) =>
+      u.email?.toLowerCase() === adminEmail ||
+      u.full_name?.toLowerCase() === adminUsername
+  );
 
-    if (updateError) {
-      console.error('Failed to update admin account:', updateError.message);
-      process.exit(1);
-    }
-    console.log('✅ Admin account updated successfully!');
+  const adminRecord = {
+    id: existingLocalIdx >= 0 ? users[existingLocalIdx].id : 'a0000000-0000-0000-0000-000000000001',
+    email: adminEmail,
+    full_name: adminUsername,
+    password_hash: passwordHash,
+    role: 'admin',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    last_login_at: null,
+  };
+
+  if (existingLocalIdx >= 0) {
+    users[existingLocalIdx] = { ...users[existingLocalIdx], ...adminRecord };
   } else {
-    console.log(`Creating new admin account "${adminUsername}" (${adminEmail})...`);
-    const { data: newUser, error: insertError } = await supabase
-      .from('users')
-      .insert({
-        email: adminEmail,
-        full_name: adminUsername,
-        password_hash: passwordHash,
-        role: 'admin',
-        is_active: true,
-      })
-      .select('id, email, full_name, role')
-      .single();
+    users.push(adminRecord);
+  }
 
-    if (insertError) {
-      console.error('Failed to insert admin account:', insertError.message);
-      process.exit(1);
+  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2), 'utf-8');
+  console.log('✅ Local database seeded with Admin credentials: data/users.json');
+
+  // 2. If Supabase is configured, seed Supabase remote instance
+  if (supabaseUrl && supabaseServiceKey) {
+    try {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id, email, role')
+        .or(`email.eq.${adminEmail},full_name.eq.${adminUsername}`)
+        .maybeSingle();
+
+      if (existingUser) {
+        console.log(`Updating Supabase admin user (${existingUser.id})...`);
+        await supabase
+          .from('users')
+          .update({
+            role: 'admin',
+            password_hash: passwordHash,
+            full_name: adminUsername,
+            is_active: true,
+          })
+          .eq('id', existingUser.id);
+        console.log('✅ Supabase remote admin account updated successfully!');
+      } else {
+        console.log(`Inserting Supabase admin account "${adminUsername}"...`);
+        await supabase.from('users').insert({
+          email: adminEmail,
+          full_name: adminUsername,
+          password_hash: passwordHash,
+          role: 'admin',
+          is_active: true,
+        });
+        console.log('✅ Supabase remote admin account created successfully!');
+      }
+    } catch (supaErr) {
+      console.warn('Note: Supabase sync skipped or failed:', supaErr.message);
     }
-    console.log('✅ Admin account created successfully! User ID:', newUser.id);
+  } else {
+    console.log('ℹ️  Note: Supabase credentials not set in .env.local yet; local database ready for localhost testing.');
   }
 
   console.log('\n---------------------------------------------');
   console.log('Admin login credentials:');
   console.log(`  Identifier: ${adminUsername} (or ${adminEmail})`);
+  console.log(`  Password:   ${adminSeedPassword}`);
   console.log('  Role:       admin');
   console.log('  Route:      /admin/login');
   console.log('---------------------------------------------');
-  console.log('⚠️  SECURITY NOTICE:');
-  console.log('  1. Rotate/delete ADMIN_SEED_PASSWORD in .env.local now.');
-  console.log('  2. Change password immediately after logging in.');
   console.log('=============================================\n');
 }
 

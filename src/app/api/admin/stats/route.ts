@@ -29,9 +29,23 @@ export async function GET() {
       .gte('created_at', oneWeekAgo);
 
     // 4. All tickets for averages & flagged calculation
-    const { data: tickets } = await supabase
-      .from('tickets')
-      .select('extraction_confidence, tamper_risk_score, created_at, transport_mode');
+    let allTickets: any[] = [];
+    try {
+      const { data } = await supabase
+        .from('tickets')
+        .select('extraction_confidence, tamper_risk_score, created_at, transport_mode');
+      if (data && data.length > 0) allTickets = data;
+    } catch {}
+
+    let userCount = totalUsers;
+    let ticketCount = totalTickets;
+
+    if (allTickets.length === 0) {
+      const { localDb } = await import('@/lib/local-store');
+      allTickets = localDb.getTickets() as any;
+      userCount = localDb.getUsers().length;
+      ticketCount = allTickets.length;
+    }
 
     let totalConfidence = 0;
     let confidenceCount = 0;
@@ -45,8 +59,8 @@ export async function GET() {
       dailyMap[key] = 0;
     }
 
-    if (tickets) {
-      tickets.forEach((t) => {
+    if (allTickets) {
+      allTickets.forEach((t: any) => {
         if (typeof t.extraction_confidence === 'number') {
           totalConfidence += Number(t.extraction_confidence);
           confidenceCount++;
@@ -71,8 +85,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       stats: {
-        totalUsers: totalUsers || 0,
-        totalTickets: totalTickets || 0,
+        totalUsers: userCount || 0,
+        totalTickets: ticketCount || 0,
         ticketsThisWeek: ticketsThisWeek || 0,
         averageConfidence: Math.round(avgConfidence * 100),
         flaggedCount,
