@@ -1,26 +1,98 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #090e17;
+  --foreground: #f8fafc;
+  --navy-dark: #070b12;
+  --navy-card: #0f172a;
+  --navy-surface: #1e293b;
+  --navy-border: #334155;
+  --accent-amber: #f59e0b;
+  --accent-amber-glow: rgba(245, 158, 11, 0.25);
+  --accent-coral: #ff6b4a;
+  --accent-emerald: #10b981;
+  --accent-rose: #f43f5e;
+  --accent-sky: #38bdf8;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Boarding Pass Ticket Styles */
+.ticket-card-glow {
+  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.15),
+              0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+
+.ticket-notch {
+  position: relative;
+}
+
+.ticket-notch::before,
+.ticket-notch::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: var(--background);
+  border-radius: 50%;
+  z-index: 20;
+}
+
+.ticket-perforation {
+  background-image: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(148, 163, 184, 0.4) 50%
+  );
+  background-size: 2px 14px;
+  background-repeat: repeat-y;
+}
+
+.barcode-pattern {
+  background: repeating-linear-gradient(
+    90deg,
+    #ffffff 0,
+    #ffffff 2px,
+    transparent 2px,
+    transparent 4px,
+    #ffffff 4px,
+    #ffffff 7px,
+    transparent 7px,
+    transparent 9px,
+    #ffffff 9px,
+    #ffffff 10px,
+    transparent 10px,
+    transparent 13px,
+    #ffffff 13px,
+    #ffffff 15px,
+    transparent 15px,
+    transparent 18px
+  );
+}
+
+/* Doorway portal glowing rim */
+.portal-glow-rim {
+  box-shadow: 0 0 60px 10px rgba(245, 158, 11, 0.35),
+              0 0 100px 30px rgba(56, 189, 248, 0.2);
+}
+
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090e17;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
 }
