@@ -130,10 +130,11 @@ function AdminTicketsContent() {
 
           <button
             onClick={handleExportTickets}
-            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition shadow-lg shadow-amber-500/20"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition shadow-lg shadow-amber-500/20"
+            title="Download formatted Excel workbook with individual passenger master rows, executive analytics and embedded visual graphs"
           >
             <Download className="w-4 h-4" />
-            <span>Export Tickets (.xlsx)</span>
+            <span>Export Analytics & Manifest (.xlsx)</span>
           </button>
         </div>
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { getServiceRoleClient } from '@/lib/db';
 import { logAuditEvent } from '@/lib/auth';
-import * as XLSX from 'xlsx';
+import { generateTicketsExcelWorkbook, generateUsersExcelWorkbook } from '@/lib/excel-export';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     const toDate = searchParams.get('to');
 
     const supabase = getServiceRoleClient();
-    const wb = XLSX.utils.book_new();
+    let excelBuffer: Buffer;
 
     if (type === 'users') {
       let query = supabase
@@ -31,18 +31,7 @@ export async function GET(req: NextRequest) {
       const { data: users, error } = await query;
       if (error) throw error;
 
-      const userRows = (users || []).map((u) => ({
-        'User ID': u.id,
-        Email: u.email,
-        'Full Name': u.full_name || 'N/A',
-        Role: u.role,
-        Active: u.is_active ? 'Yes' : 'No',
-        'Created At': u.created_at,
-        'Last Login': u.last_login_at || 'Never',
-      }));
-
-      const ws = XLSX.utils.json_to_sheet(userRows);
-      XLSX.utils.book_append_sheet(wb, ws, 'Users');
+      excelBuffer = await generateUsersExcelWorkbook(users || [], session.email || 'Admin');
     } else {
       let query = supabase
         .from('tickets')
@@ -55,32 +44,13 @@ export async function GET(req: NextRequest) {
       const { data: tickets, error } = await query;
       if (error) throw error;
 
-      const ticketRows = (tickets || []).map((t) => ({
-        'Ticket ID': t.id,
-        'User ID': t.user_id,
-        'Transport Mode': t.transport_mode,
-        'Passenger Name': t.passenger_name || 'N/A',
-        'Passenger Age': t.passenger_age || 'N/A',
-        Carrier: t.carrier_name || 'N/A',
-        Status: t.booking_status,
-        'PNR / Booking ID': t.pnr_booking_id || 'N/A',
-        Origin: t.boarding_place || 'N/A',
-        Destination: t.destination_place || 'N/A',
-        Departure: t.departure_datetime || 'N/A',
-        Arrival: t.arrival_datetime || 'N/A',
-        'Seat / Coach': t.seat_class_coach || 'N/A',
-        'AI Confidence': t.extraction_confidence,
-        'Tamper Risk Score': t.tamper_risk_score,
-        'Manually Corrected': t.manually_corrected ? 'Yes' : 'No',
-        'Created At': t.created_at,
-      }));
-
-      const ws = XLSX.utils.json_to_sheet(ticketRows);
-      XLSX.utils.book_append_sheet(wb, ws, 'Tickets');
+      const filterLabel = fromDate && toDate ? `Period: ${fromDate} to ${toDate}` : 'Complete Dataset (All Time)';
+      excelBuffer = await generateTicketsExcelWorkbook({
+        tickets: tickets || [],
+        generatedBy: session.email || 'Admin',
+        filterLabel,
+      });
     }
-
-    // Write to Excel buffer
-    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
     // Record audit event
     await logAuditEvent({
@@ -89,16 +59,19 @@ export async function GET(req: NextRequest) {
       metadata: { exportType: type, fromDate, toDate },
     });
 
-    const filename = `TicketScan_${type}_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const dateTag = new Date().toISOString().split('T')[0];
+    const filename = `TicketScan_${type === 'tickets' ? 'Enterprise_Manifest_Analytics' : 'Users_Directory'}_${dateTag}.xlsx`;
 
-    return new NextResponse(buf, {
+    return new NextResponse(excelBuffer as any, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'no-store, max-age=0',
       },
     });
   } catch (error: any) {
+    console.error('Export route error:', error);
     return NextResponse.json({ error: error?.message || 'Export error' }, { status: 500 });
   }
 }

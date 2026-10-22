@@ -112,10 +112,11 @@ export default function AdminDashboardPage() {
 
             <button
               onClick={() => handleExport('tickets')}
-              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition cursor-pointer"
+              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition cursor-pointer"
+              title="Download formatted Excel workbook with individual passenger master rows, executive analytics and embedded visual graphs"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export All to Excel</span>
+              <Download className="w-4 h-4" />
+              <span>Export Analytics & Manifest (.xlsx)</span>
             </button>
           </div>
         </div>
