@@ -93,7 +93,7 @@ export default function AdminDashboardPage() {
               <Shield className="w-3.5 h-3.5" />
               <span>COMMAND INTELLIGENCE DASHBOARD</span>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
               System Administration
             </h1>
             <p className="text-xs font-mono text-slate-400 mt-0.5">
@@ -101,10 +101,10 @@ export default function AdminDashboardPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() => setShowPasswordModal(true)}
-              className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition"
+              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition cursor-pointer"
             >
               <Key className="w-3.5 h-3.5 text-amber-400" />
               <span>Rotate Admin Password</span>
@@ -112,7 +112,7 @@ export default function AdminDashboardPage() {
 
             <button
               onClick={() => handleExport('tickets')}
-              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition"
+              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/20 transition cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export All to Excel</span>
@@ -121,96 +121,101 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* 5 Primary Stat Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 w-full">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-mono uppercase">Total Users</span>
-              <Users className="w-4 h-4 text-sky-400" />
+              <span className="text-[11px] sm:text-xs font-mono uppercase truncate">Total Users</span>
+              <Users className="w-4 h-4 text-sky-400 shrink-0" />
             </div>
-            <div className="text-3xl font-black font-mono text-white">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-white">
               {stats?.totalUsers || 0}
             </div>
-            <span className="text-[11px] text-slate-500 font-mono">Registered accounts</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Registered accounts</span>
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-mono uppercase">Total Tickets</span>
-              <Ticket className="w-4 h-4 text-amber-400" />
+              <span className="text-[11px] sm:text-xs font-mono uppercase truncate">Total Tickets</span>
+              <Ticket className="w-4 h-4 text-amber-400 shrink-0" />
             </div>
-            <div className="text-3xl font-black font-mono text-amber-400">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-amber-400">
               {stats?.totalTickets || 0}
             </div>
-            <span className="text-[11px] text-slate-500 font-mono">Processed via Vision AI</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Processed via Vision AI</span>
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-mono uppercase">This Week</span>
-              <Calendar className="w-4 h-4 text-emerald-400" />
+              <span className="text-[11px] sm:text-xs font-mono uppercase truncate">This Week</span>
+              <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
             </div>
-            <div className="text-3xl font-black font-mono text-emerald-400">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-400">
               {stats?.ticketsThisWeek || 0}
             </div>
-            <span className="text-[11px] text-slate-500 font-mono">Ingested in last 7 days</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Ingested in last 7 days</span>
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-slate-400">
-              <span className="text-xs font-mono uppercase">Avg Confidence</span>
-              <Sparkles className="w-4 h-4 text-sky-400" />
+              <span className="text-[11px] sm:text-xs font-mono uppercase truncate">Avg Confidence</span>
+              <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
             </div>
-            <div className="text-3xl font-black font-mono text-sky-400">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-sky-400">
               {stats?.averageConfidence || 94}%
             </div>
-            <span className="text-[11px] text-slate-500 font-mono">Model extraction score</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Model extraction score</span>
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-900/70 border border-red-500/30 col-span-2 lg:col-span-1 space-y-1">
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-red-500/30 col-span-2 lg:col-span-1 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-red-400">
-              <span className="text-xs font-mono uppercase">Flagged Risk</span>
-              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <span className="text-[11px] sm:text-xs font-mono uppercase truncate">Flagged Risk</span>
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
             </div>
-            <div className="text-3xl font-black font-mono text-red-400">
+            <div className="text-2xl sm:text-3xl font-black font-mono text-red-400">
               {stats?.flaggedCount || 0}
             </div>
-            <span className="text-[11px] text-red-300 font-mono">Tamper risk &gt; 0.30</span>
+            <span className="text-[10px] sm:text-[11px] text-red-300 font-mono truncate block">Tamper risk &gt; 0.30</span>
           </div>
         </div>
 
         {/* 30-Day Activity Bar Chart */}
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="p-4 sm:p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 sm:space-y-4 w-full overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-amber-400" />
-              <h3 className="font-bold text-white text-base">
+              <BarChart3 className="w-5 h-5 text-amber-400 shrink-0" />
+              <h3 className="font-bold text-white text-sm sm:text-base">
                 Upload & Processing Volume (Last 14 Days)
               </h3>
             </div>
-            <span className="text-xs font-mono text-slate-500">Real-time Telemetry</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] sm:text-xs font-mono text-slate-500">Real-time Telemetry</span>
+              <span className="sm:hidden text-[10px] text-amber-400/80 font-mono">(Swipe →)</span>
+            </div>
           </div>
 
-          {/* Render Responsive SVG Bar Chart */}
-          <div className="h-44 w-full flex items-end gap-2 sm:gap-4 pt-6 px-2">
-            {stats?.chartData?.map((item: any, i: number) => {
-              const maxVal = Math.max(...stats.chartData.map((d: any) => d.count), 5);
-              const heightPct = Math.max(12, Math.round((item.count / maxVal) * 100));
+          {/* Horizontally scrollable on mobile so it never stretches viewport */}
+          <div className="w-full overflow-x-auto pb-2 scrollbar-none">
+            <div className="h-44 min-w-[540px] sm:min-w-full flex items-end gap-2 sm:gap-4 pt-6 px-1">
+              {stats?.chartData?.map((item: any, i: number) => {
+                const maxVal = Math.max(...stats.chartData.map((d: any) => d.count), 5);
+                const heightPct = Math.max(12, Math.round((item.count / maxVal) * 100));
 
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                  <span className="text-[10px] font-mono text-slate-400 group-hover:text-amber-400 transition">
-                    {item.count}
-                  </span>
-                  <div
-                    style={{ height: `${heightPct}%` }}
-                    className="w-full rounded-t-lg bg-gradient-to-t from-slate-800 to-amber-500 group-hover:to-amber-400 transition-all duration-300 shadow-md"
-                  />
-                  <span className="text-[10px] font-mono text-slate-500 truncate w-full text-center">
-                    {item.date}
-                  </span>
-                </div>
-              );
-            })}
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-2 group min-w-[28px]">
+                    <span className="text-[10px] font-mono text-slate-400 group-hover:text-amber-400 transition">
+                      {item.count}
+                    </span>
+                    <div
+                      style={{ height: `${heightPct}%` }}
+                      className="w-full rounded-t-lg bg-gradient-to-t from-slate-800 to-amber-500 group-hover:to-amber-400 transition-all duration-300 shadow-md"
+                    />
+                    <span className="text-[9px] sm:text-[10px] font-mono text-slate-500 truncate w-full text-center">
+                      {item.date}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 

@@ -113,7 +113,10 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
 
   return (
     <div className="relative w-screen h-[100dvh] overflow-hidden bg-black select-none">
-      {/* Background Video Element (Unscaled & direct hardware rendering for maximum crispness) */}
+      {/* Video Background Layer */}
+      <div className="absolute inset-0 bg-black z-0" />
+
+      {/* High-Definition Video Element (Native hardware decoding & smooth GPU filtering) */}
       <motion.video
         ref={videoRef}
         autoPlay
@@ -126,11 +129,7 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
           opacity: isCompleted ? 0 : isEmerging ? 0.35 : 1,
         }}
         transition={{ duration: 1.8, ease: 'easeOut' }}
-        style={{
-          imageRendering: 'crisp-edges',
-          transform: 'translateZ(0)',
-        }}
-        className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-0"
+        className="absolute inset-0 w-full h-full object-contain sm:object-cover object-center pointer-events-none z-0"
       >
         <source src="/videos/intro.mp4" type="video/mp4" />
       </motion.video>

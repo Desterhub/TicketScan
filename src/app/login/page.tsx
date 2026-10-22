@@ -1,7 +1,7 @@
 import { LoginForm } from '@/components/auth/LoginForm';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ShieldCheck, Sparkles, Scan, FileCheck } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Passenger Check-In | TicketScan',
@@ -55,33 +55,6 @@ export default function LoginPage() {
             structured travel data in seconds and applies multi-layer forensic checks to surface
             tamper risks.
           </p>
-
-          {/* Value Badges */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center gap-2.5">
-              <Scan className="w-5 h-5 text-sky-400 shrink-0" />
-              <div className="text-left">
-                <div className="text-xs font-bold text-slate-200">Vision AI</div>
-                <div className="text-[11px] text-slate-500">Multi-page parsing</div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center gap-2.5">
-              <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
-              <div className="text-left">
-                <div className="text-xs font-bold text-slate-200">Forensics</div>
-                <div className="text-[11px] text-slate-500">ELA & text signals</div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center gap-2.5">
-              <FileCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-              <div className="text-left">
-                <div className="text-xs font-bold text-slate-200">Boarding Pass</div>
-                <div className="text-[11px] text-slate-500">Polished stub UI</div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Right Form Container */}
