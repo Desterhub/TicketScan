@@ -93,7 +93,8 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         {
-          error: 'Invalid passenger name or password.',
+          error: 'No passenger account found with this name. First-time travelers must Register first before signing in.',
+          needsRegistration: true,
           remainingAttempts: rateLimit.remainingAttempts - 1,
         },
         { status: 401 }
@@ -120,7 +121,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         {
-          error: 'Invalid passenger name or password.',
+          error: 'Incorrect password for this account. Please try again.',
           remainingAttempts: rateLimit.remainingAttempts - 1,
         },
         { status: 401 }

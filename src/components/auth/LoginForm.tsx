@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,9 +12,11 @@ import {
   ArrowRight,
   Lock,
   User as UserIcon,
+  Mail,
   Play,
   AlertCircle,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 
 interface LoginFormProps {
@@ -25,23 +27,43 @@ interface LoginFormProps {
 
 export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: LoginFormProps) {
   const router = useRouter();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  // Default to 'signup' for first-time visitors
+  const [mode, setMode] = useState<'login' | 'signup'>('signup');
   const [passengerName, setPassengerName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [needsRegistration, setNeedsRegistration] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Check if this browser has already registered previously
+  useEffect(() => {
+    try {
+      const hasRegistered = localStorage.getItem('ticketscan_has_registered');
+      if (hasRegistered === 'true') {
+        setMode('login');
+      }
+    } catch {}
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setNeedsRegistration(false);
     setLoading(true);
 
     try {
+      if (mode === 'signup') {
+        if (!email.trim() || !email.includes('@')) {
+          throw new Error('A valid email address is mandatory for notifications & ticket updates.');
+        }
+      }
+
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
       const payload =
         mode === 'login'
           ? { identifier: passengerName.trim(), password }
-          : { fullName: passengerName.trim(), password };
+          : { fullName: passengerName.trim(), email: email.trim(), password };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -52,8 +74,16 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.needsRegistration) {
+          setNeedsRegistration(true);
+        }
         throw new Error(data.error || 'Authentication failed. Please verify your details.');
       }
+
+      // Mark that user has registered on this browser
+      try {
+        localStorage.setItem('ticketscan_has_registered', 'true');
+      } catch {}
 
       if (onSuccess) {
         onSuccess();
@@ -102,30 +132,51 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
           onClick={() => {
             setMode('login');
             setError(null);
+            setNeedsRegistration(false);
           }}
-          className={`py-2 rounded-lg transition-all font-semibold ${
+          className={`py-2 rounded-lg transition-all font-semibold flex items-center justify-center gap-1.5 ${
             mode === 'login'
               ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          Sign In
+          <span>Sign In</span>
         </button>
         <button
           type="button"
           onClick={() => {
             setMode('signup');
             setError(null);
+            setNeedsRegistration(false);
           }}
-          className={`py-2 rounded-lg transition-all font-semibold ${
+          className={`py-2 rounded-lg transition-all font-semibold flex items-center justify-center gap-1.5 relative ${
             mode === 'signup'
               ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
               : 'text-slate-400 hover:text-white'
           }`}
         >
-          Register
+          <span>Register</span>
+          <span
+            className={`text-[9px] px-1.5 py-0.5 rounded font-mono uppercase tracking-wider font-semibold ${
+              mode === 'signup'
+                ? 'bg-slate-950/80 text-amber-300'
+                : 'bg-amber-500/20 text-amber-400'
+            }`}
+          >
+            Required 1st
+          </span>
         </button>
       </div>
+
+      {/* Mandatory First-Time Notice */}
+      {mode === 'signup' && (
+        <div className="mb-3.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] flex items-center gap-2 font-mono">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="leading-tight">
+            First-time passengers must complete registration once before accessing the scanner gate.
+          </span>
+        </div>
+      )}
 
       {/* Error Alert */}
       <AnimatePresence mode="wait">
@@ -134,10 +185,26 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="mb-3 p-3 rounded-xl bg-red-950/70 border border-red-500/40 text-red-200 text-xs flex items-start gap-2.5"
+            className="mb-3.5 p-3 rounded-xl bg-red-950/80 border border-red-500/50 text-red-200 text-xs flex items-start gap-2.5"
           >
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-            <span className="leading-snug">{error}</span>
+            <div className="flex-1">
+              <p className="leading-snug">{error}</p>
+              {needsRegistration && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('signup');
+                    setError(null);
+                    setNeedsRegistration(false);
+                  }}
+                  className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-[11px] shadow hover:bg-amber-400 transition cursor-pointer"
+                >
+                  <span>Switch to Registration Now</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -186,12 +253,51 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
               className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
             />
           </div>
-          {mode === 'login' && (
+          {mode === 'login' ? (
             <p className="mt-1 text-[11px] font-mono text-slate-500">
               Enter the full name or username you registered with
             </p>
+          ) : (
+            <p className="mt-1 text-[11px] font-mono text-slate-500">
+              This name will be your login ID for all future sign-ins
+            </p>
           )}
         </div>
+
+        {/* Mandatory Email Field (Visible ONLY in Registration Mode) */}
+        {mode === 'signup' && (
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-mono uppercase tracking-wider text-slate-300">
+                Email Address <span className="text-amber-400 font-bold">*Mandatory</span>
+              </label>
+              <span className="text-[10px] font-mono text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                For Alerts & Updates
+              </span>
+            </div>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="email"
+                name="passenger_contact_dispatch"
+                id="passenger_contact_dispatch"
+                required
+                autoComplete="new-password"
+                autoCorrect="off"
+                spellCheck="false"
+                data-lpignore="true"
+                data-form-type="other"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. alex.morgan@example.com"
+                className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
+              />
+            </div>
+            <p className="mt-1 text-[11px] font-mono text-amber-400/80">
+              Mandatory: Stored so we can email you ticket scanning reports & forensic tamper notifications.
+            </p>
+          </div>
+        )}
 
         {/* Password Field */}
         <div>
@@ -229,11 +335,46 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
             </>
           ) : (
             <>
-              <span>{mode === 'login' ? 'Board & Enter Dashboard' : 'Complete Registration'}</span>
+              <span>{mode === 'login' ? 'Board & Enter Dashboard' : 'Register Passenger Pass'}</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
         </button>
+
+        {/* Quick Mode Toggle Link */}
+        <div className="text-center pt-1">
+          {mode === 'login' ? (
+            <button
+              type="button"
+              onClick={() => {
+                setMode('signup');
+                setError(null);
+                setNeedsRegistration(false);
+              }}
+              className="text-xs text-slate-400 hover:text-amber-400 font-mono transition inline-flex items-center gap-1 cursor-pointer"
+            >
+              <span>First time here?</span>
+              <span className="text-amber-400 underline underline-offset-2 font-semibold">
+                Register first (Compulsory)
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setMode('login');
+                setError(null);
+                setNeedsRegistration(false);
+              }}
+              className="text-xs text-slate-400 hover:text-amber-400 font-mono transition inline-flex items-center gap-1 cursor-pointer"
+            >
+              <span>Already registered?</span>
+              <span className="text-amber-400 underline underline-offset-2 font-semibold">
+                Sign In with your Passenger Name
+              </span>
+            </button>
+          )}
+        </div>
       </form>
 
       {/* Ticket Footer Perforation & Security Stub */}

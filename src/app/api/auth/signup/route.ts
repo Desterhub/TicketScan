@@ -6,8 +6,8 @@ import { signSessionToken, getSessionCookieOptions } from '@/lib/session';
 
 const signupSchema = z.object({
   fullName: z.string().min(2, 'Passenger name must be at least 2 characters'),
+  email: z.string().email('Valid email address is mandatory for future notifications'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
 });
 
 export async function POST(req: NextRequest) {
@@ -22,10 +22,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { fullName, password, email } = parsed.data;
+    const { fullName, email, password } = parsed.data;
     const cleanName = fullName.trim();
-    const sanitizedEmailUser = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const normalizedEmail = (email && email.trim()) ? email.toLowerCase().trim() : `${sanitizedEmailUser || 'passenger'}@passenger.local`;
+    const normalizedEmail = email.toLowerCase().trim();
     const supabase = getServiceRoleClient();
 
     // Check if user already exists by name OR email in Supabase
