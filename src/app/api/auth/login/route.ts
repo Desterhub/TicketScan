@@ -10,7 +10,8 @@ import {
 } from '@/lib/rate-limit';
 
 const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required'),
+  identifier: z.string().min(1, 'Passenger name is required').optional(),
+  email: z.string().optional(),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -26,20 +27,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password } = parsed.data;
-    const normalizedEmail = email.toLowerCase().trim();
+    const { identifier, email, password } = parsed.data;
+    const loginId = (identifier || email || '').trim();
+    const normalizedId = loginId.toLowerCase();
+
+    if (!loginId) {
+      return NextResponse.json({ error: 'Passenger name or email is required' }, { status: 400 });
+    }
+
     const ipAddress =
       req.headers.get('x-forwarded-for')?.split(',')[0] ||
       req.headers.get('x-real-ip') ||
       'unknown';
 
     // 1. Rate Limiting Check (5 attempts per 15 minutes)
-    const rateLimit = await checkLoginRateLimit(normalizedEmail);
+    const rateLimit = await checkLoginRateLimit(normalizedId);
     if (rateLimit.isRateLimited) {
       await logAuditEvent({
         action: 'failed_login',
         metadata: {
-          email: normalizedEmail,
+          identifier: loginId,
           reason: 'rate_limited',
           retryAfterMinutes: rateLimit.retryAfterMinutes,
         },
@@ -54,7 +61,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Fetch user by email
+    // 2. Fetch user by full_name OR email
     const supabase = getServiceRoleClient();
     let user: any = null;
 
@@ -62,27 +69,31 @@ export async function POST(req: NextRequest) {
       const { data, error: fetchError } = await supabase
         .from('users')
         .select('id, email, password_hash, full_name, role, is_active')
-        .eq('email', normalizedEmail)
+        .or(`email.ilike.${normalizedId},full_name.ilike.${loginId}`)
         .maybeSingle();
       if (!fetchError && data) user = data;
     } catch {}
 
     if (!user) {
       const { localDb } = await import('@/lib/local-store');
-      user = localDb.getUsers().find((u) => u.email.toLowerCase() === normalizedEmail);
+      user = localDb.getUsers().find(
+        (u) =>
+          u.full_name?.toLowerCase() === normalizedId ||
+          u.email?.toLowerCase() === normalizedId
+      );
     }
 
     if (!user) {
-      recordLocalFailedAttempt(normalizedEmail);
+      recordLocalFailedAttempt(normalizedId);
       await logAuditEvent({
         action: 'failed_login',
-        metadata: { email: normalizedEmail, reason: 'user_not_found' },
+        metadata: { identifier: loginId, reason: 'user_not_found' },
         ipAddress,
       });
 
       return NextResponse.json(
         {
-          error: 'Invalid email or password.',
+          error: 'Invalid passenger name or password.',
           remainingAttempts: rateLimit.remainingAttempts - 1,
         },
         { status: 401 }
@@ -99,17 +110,17 @@ export async function POST(req: NextRequest) {
     // 3. Verify password hash using bcrypt
     const isValid = await verifyPassword(password, user.password_hash);
     if (!isValid) {
-      recordLocalFailedAttempt(normalizedEmail);
+      recordLocalFailedAttempt(normalizedId);
       await logAuditEvent({
         userId: user.id,
         action: 'failed_login',
-        metadata: { email: normalizedEmail, reason: 'invalid_password' },
+        metadata: { identifier: loginId, reason: 'invalid_password' },
         ipAddress,
       });
 
       return NextResponse.json(
         {
-          error: 'Invalid email or password.',
+          error: 'Invalid passenger name or password.',
           remainingAttempts: rateLimit.remainingAttempts - 1,
         },
         { status: 401 }
@@ -117,7 +128,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Successful login: reset rate limit & update last_login_at
-    resetLoginAttempts(normalizedEmail);
+    resetLoginAttempts(normalizedId);
     await supabase
       .from('users')
       .update({ last_login_at: new Date().toISOString() })
@@ -126,7 +137,7 @@ export async function POST(req: NextRequest) {
     await logAuditEvent({
       userId: user.id,
       action: 'login',
-      metadata: { email: normalizedEmail, role: user.role },
+      metadata: { identifier: loginId, email: user.email, role: user.role },
       ipAddress,
     });
 

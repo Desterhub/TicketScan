@@ -105,7 +105,9 @@ export default function AdminLoginPage() {
         </AnimatePresence>
 
         {/* Form */}
-        <form onSubmit={handleAdminLogin} className="space-y-4">
+        <form onSubmit={handleAdminLogin} className="space-y-4" autoComplete="off">
+          <input type="text" name="b_admin_usr" className="hidden" tabIndex={-1} autoComplete="off" />
+          <input type="password" name="b_admin_pwd" className="hidden" tabIndex={-1} autoComplete="off" />
           <div>
             <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
               Admin Identifier (Username or Email)
@@ -114,7 +116,10 @@ export default function AdminLoginPage() {
               <UserCheck className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                name="admin_ident_field"
                 required
+                autoComplete="new-password"
+                data-lpignore="true"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="tirth"
@@ -134,7 +139,10 @@ export default function AdminLoginPage() {
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="password"
+                name="admin_sec_pass"
                 required
+                autoComplete="new-password"
+                data-lpignore="true"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"

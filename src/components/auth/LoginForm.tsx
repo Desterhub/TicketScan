@@ -11,7 +11,6 @@ import {
   Bus,
   ArrowRight,
   Lock,
-  Mail,
   User as UserIcon,
   Play,
   AlertCircle,
@@ -27,9 +26,8 @@ interface LoginFormProps {
 export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: LoginFormProps) {
   const router = useRouter();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
+  const [passengerName, setPassengerName] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,8 +40,8 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
       const payload =
         mode === 'login'
-          ? { email, password }
-          : { email, password, fullName: fullName.trim() || undefined };
+          ? { identifier: passengerName.trim(), password }
+          : { fullName: passengerName.trim(), password };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -54,7 +52,7 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Authentication failed. Please verify your credentials.');
+        throw new Error(data.error || 'Authentication failed. Please verify your details.');
       }
 
       if (onSuccess) {
@@ -71,26 +69,26 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
 
   return (
     <div
-      className={`w-full max-w-md mx-auto rounded-2xl bg-[#0f172a]/95 border border-[#334155] shadow-2xl backdrop-blur-xl relative overflow-hidden transition-all ${
-        isInPortal ? 'p-6 sm:p-7 shadow-[0_0_50px_rgba(245,158,11,0.2)]' : 'p-7 sm:p-8'
+      className={`w-full max-w-sm sm:max-w-md mx-auto rounded-2xl bg-[#0f172a]/95 border border-[#334155] shadow-2xl backdrop-blur-xl relative overflow-hidden transition-all ${
+        isInPortal ? 'p-5 sm:p-6 shadow-[0_0_50px_rgba(245,158,11,0.25)]' : 'p-6 sm:p-8'
       }`}
     >
       {/* Boarding Pass Header Stamp */}
-      <div className="flex items-center justify-between pb-4 border-b border-[#334155]/80">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-amber-500/20">
+      <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-[#334155]/80">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-amber-500/20">
             <Ticket className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs font-mono tracking-widest uppercase text-amber-400 font-semibold flex items-center gap-1.5">
+            <div className="text-[10px] sm:text-xs font-mono tracking-widest uppercase text-amber-400 font-semibold flex items-center gap-1.5">
               <span>BOARDING PASS</span>
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             </div>
-            <h2 className="text-lg font-bold text-white tracking-tight">TicketScan Gate</h2>
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">TicketScan Gate</h2>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-[11px] font-mono text-slate-300">
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-[10px] font-mono text-slate-300">
           <Plane className="w-3.5 h-3.5 text-sky-400" />
           <Train className="w-3.5 h-3.5 text-amber-400" />
           <Bus className="w-3.5 h-3.5 text-emerald-400" />
@@ -98,7 +96,7 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
       </div>
 
       {/* Mode Switch Tabs */}
-      <div className="grid grid-cols-2 p-1 my-5 bg-slate-900/90 rounded-xl border border-slate-800 text-xs font-medium">
+      <div className="grid grid-cols-2 p-1 my-4 bg-slate-900/90 rounded-xl border border-slate-800 text-xs font-medium">
         <button
           type="button"
           onClick={() => {
@@ -136,65 +134,84 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="mb-4 p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs flex items-start gap-2.5"
+            className="mb-3 p-3 rounded-xl bg-red-950/70 border border-red-500/40 text-red-200 text-xs flex items-start gap-2.5"
           >
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-            <span>{error}</span>
+            <span className="leading-snug">{error}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Form Fields */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {mode === 'signup' && (
-          <div>
-            <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
-              Passenger Full Name
-            </label>
-            <div className="relative">
-              <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="e.g. Maya Lin"
-                className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
-              />
-            </div>
-          </div>
-        )}
+      {/* Form Fields with Browser Autofill Prevention */}
+      <form onSubmit={handleSubmit} className="space-y-3.5" autoComplete="off">
+        {/* Hidden inputs to divert browser autofill / password managers */}
+        <input
+          type="text"
+          name="prevent_autofill_name_trap"
+          className="hidden"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+        />
+        <input
+          type="password"
+          name="prevent_autofill_pass_trap"
+          className="hidden"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+        />
 
+        {/* Passenger Name Field (Used for both Register and Sign In) */}
         <div>
-          <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
-            Email Address
+          <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1">
+            {mode === 'signup' ? 'Passenger Full Name' : 'Passenger Name'}
           </label>
           <div className="relative">
-            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
-              type="email"
+              type="text"
+              name="passenger_access_identifier"
+              id="passenger_access_identifier"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="passenger@domain.com"
+              autoComplete="new-password"
+              autoCorrect="off"
+              autoCapitalize="words"
+              spellCheck="false"
+              data-lpignore="true"
+              data-form-type="other"
+              value={passengerName}
+              onChange={(e) => setPassengerName(e.target.value)}
+              placeholder="e.g. Alex Morgan"
               className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
             />
           </div>
+          {mode === 'login' && (
+            <p className="mt-1 text-[11px] font-mono text-slate-500">
+              Enter the full name or username you registered with
+            </p>
+          )}
         </div>
 
+        {/* Password Field */}
         <div>
-          <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
-            Password
+          <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1">
+            {mode === 'signup' ? 'Create Password' : 'Password'}
           </label>
           <div className="relative">
             <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="password"
+              name="passenger_security_secret"
+              id="passenger_security_secret"
               required
+              autoComplete="new-password"
+              data-lpignore="true"
+              data-form-type="other"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
+              className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition font-mono"
             />
           </div>
         </div>
@@ -203,12 +220,12 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 transition duration-200 shadow-lg shadow-amber-500/25 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+          className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition duration-200 shadow-lg shadow-amber-500/25 active:scale-[0.99] disabled:opacity-60 cursor-pointer"
         >
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Validating Clearance...</span>
+              <span>Checking Clearance...</span>
             </>
           ) : (
             <>
@@ -220,10 +237,10 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
       </form>
 
       {/* Ticket Footer Perforation & Security Stub */}
-      <div className="mt-6 pt-4 border-t border-dashed border-slate-700/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-        <div className="flex items-center gap-1.5 text-emerald-400">
+      <div className="mt-5 pt-3.5 border-t border-dashed border-slate-700/80 flex items-center justify-between text-[11px] text-slate-400 font-mono gap-2">
+        <div className="flex items-center gap-1.5 text-emerald-400 shrink-0">
           <ShieldCheck className="w-3.5 h-3.5" />
-          <span>256-Bit TLS Guard</span>
+          <span>256-Bit Guard</span>
         </div>
 
         {/* Watch Intro Link */}
@@ -249,7 +266,7 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
       </div>
 
       {/* Decorative Barcode Pattern */}
-      <div className="mt-3 h-4 barcode-pattern opacity-25 rounded-sm" />
+      <div className="mt-3 h-3.5 barcode-pattern opacity-25 rounded-sm" />
     </div>
   );
 }

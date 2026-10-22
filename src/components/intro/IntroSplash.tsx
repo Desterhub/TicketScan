@@ -113,22 +113,24 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
 
   return (
     <div className="relative w-screen h-[100dvh] overflow-hidden bg-black select-none">
-      {/* Background Video Element */}
+      {/* Background Video Element (Unscaled & direct hardware rendering for maximum crispness) */}
       <motion.video
         ref={videoRef}
         autoPlay
         muted={isMuted}
         playsInline
         preload="auto"
-        poster="/videos/intro-poster.jpg"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleFinish}
         animate={{
           opacity: isCompleted ? 0 : isEmerging ? 0.35 : 1,
-          scale: isEmerging ? 1.05 : 1,
         }}
         transition={{ duration: 1.8, ease: 'easeOut' }}
-        className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
+        style={{
+          imageRendering: 'crisp-edges',
+          transform: 'translateZ(0)',
+        }}
+        className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none z-0"
       >
         <source src="/videos/intro.mp4" type="video/mp4" />
       </motion.video>
@@ -142,49 +144,49 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
         className="absolute inset-0 pointer-events-none z-10 bg-radial from-amber-500/20 via-slate-950/70 to-slate-950/95"
       />
 
-      {/* Emergent Functional Login Form (Portal Transition) */}
+      {/* Emergent Functional Login Form (Portal Transition) - Fully Mobile Responsive */}
       <AnimatePresence>
         {isEmerging && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.82, y: 15 }}
+            initial={{ opacity: 0, scale: 0.85, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{
               duration: 1.8,
-              ease: [0.16, 1, 0.3, 1], // Custom smooth ease-out
+              ease: [0.16, 1, 0.3, 1],
             }}
-            className="absolute inset-0 z-20 flex items-center justify-center p-4"
+            className="absolute inset-0 z-20 flex items-center justify-center p-3 sm:p-4 max-h-[100dvh] overflow-y-auto"
           >
-            <div className="w-full max-w-md portal-glow-rim rounded-2xl">
+            <div className="w-full max-w-sm sm:max-w-md portal-glow-rim rounded-2xl my-auto">
               <LoginForm isInPortal={true} onSuccess={handleFinish} />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Subtle Audio Mute/Unmute Toggle (Bottom-Left) */}
-      <div className="absolute bottom-6 left-6 z-30">
+      {/* Audio Mute/Unmute Toggle (Top-Left on Mobile, Bottom-Left on Desktop) */}
+      <div className="absolute top-4 left-4 sm:top-auto sm:bottom-6 sm:left-6 z-30">
         <button
           type="button"
           onClick={toggleMute}
-          className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-950/70 hover:bg-slate-900 border border-slate-700/60 text-slate-300 hover:text-white backdrop-blur-md text-xs font-mono transition shadow-lg cursor-pointer"
+          className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-950/80 hover:bg-slate-900 border border-slate-700/70 text-slate-300 hover:text-white backdrop-blur-md text-xs font-mono transition shadow-lg cursor-pointer"
           title={isMuted ? 'Enable Sound' : 'Mute Sound'}
         >
           {isMuted ? (
             <>
               <VolumeX className="w-3.5 h-3.5 text-amber-400" />
-              <span>Unmute</span>
+              <span className="hidden xs:inline sm:inline">Unmute</span>
             </>
           ) : (
             <>
               <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Sound On</span>
+              <span className="hidden xs:inline sm:inline">Sound On</span>
             </>
           )}
         </button>
       </div>
 
-      {/* "Skip Intro →" Floating Pill (Bottom-Right) */}
+      {/* "Skip Intro →" Floating Pill (Top-Right on Mobile, Bottom-Right on Desktop) */}
       <AnimatePresence>
         {showSkip && !isCompleted && (
           <motion.div
@@ -192,12 +194,12 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="absolute bottom-6 right-6 z-30"
+            className="absolute top-4 right-4 sm:top-auto sm:bottom-6 sm:right-6 z-30"
           >
             <button
               type="button"
               onClick={handleSkip}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 hover:bg-amber-500 hover:text-slate-950 text-slate-300 border border-slate-700/70 hover:border-amber-400 backdrop-blur-md text-xs font-mono font-semibold transition-all duration-200 shadow-xl cursor-pointer group"
+              className="flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-slate-900/90 hover:bg-amber-500 hover:text-slate-950 text-slate-200 border border-slate-700/80 hover:border-amber-400 backdrop-blur-md text-xs font-mono font-semibold transition-all duration-200 shadow-xl cursor-pointer group"
             >
               <span>Skip Intro</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />

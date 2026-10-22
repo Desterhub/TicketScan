@@ -5,9 +5,9 @@ import { hashPassword, logAuditEvent } from '@/lib/auth';
 import { signSessionToken, getSessionCookieOptions } from '@/lib/session';
 
 const signupSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  fullName: z.string().min(2, 'Passenger name must be at least 2 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  fullName: z.string().min(1, 'Full name is required').optional(),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
 });
 
 export async function POST(req: NextRequest) {
@@ -22,20 +22,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password, fullName } = parsed.data;
-    const normalizedEmail = email.toLowerCase().trim();
+    const { fullName, password, email } = parsed.data;
+    const cleanName = fullName.trim();
+    const sanitizedEmailUser = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalizedEmail = (email && email.trim()) ? email.toLowerCase().trim() : `${sanitizedEmailUser || 'passenger'}@passenger.local`;
     const supabase = getServiceRoleClient();
 
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
+    // Check if user already exists by name OR email in Supabase
+    let exists = false;
+    try {
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id, full_name, email')
+        .or(`email.ilike.${normalizedEmail},full_name.ilike.${cleanName}`)
+        .maybeSingle();
 
-    if (existingUser) {
+      if (existingUser) exists = true;
+    } catch {}
+
+    // Also check local database
+    if (!exists) {
+      const { localDb } = await import('@/lib/local-store');
+      const localUsers = localDb.getUsers();
+      if (localUsers.some((u) => u.full_name?.toLowerCase() === cleanName.toLowerCase() || u.email?.toLowerCase() === normalizedEmail)) {
+        exists = true;
+      }
+    }
+
+    if (exists) {
       return NextResponse.json(
-        { error: 'An account with this email already exists.' },
+        { error: 'An account with this passenger name already exists. Please sign in or choose another name.' },
         { status: 409 }
       );
     }
