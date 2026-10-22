@@ -44,7 +44,15 @@ export async function extractTicketData(
           source: 'pdf_stream_decoder',
           charCount: pdfText.length,
           extractedAt: new Date().toISOString(),
-          paxCount: parsed.passenger_name ? parsed.passenger_name.split(',').length : 0,
+          paxCount: parsed.passengers ? parsed.passengers.length : 1,
+          passengers: parsed.passengers,
+          transaction_id: parsed.transaction_id,
+          quota: parsed.quota,
+          distance_km: parsed.distance_km,
+          booking_date: parsed.booking_date,
+          ticket_fare: parsed.ticket_fare,
+          convenience_fee: parsed.convenience_fee,
+          total_fare: parsed.total_fare,
         },
       };
     }
@@ -90,6 +98,14 @@ export async function extractTicketData(
       engine: 'Deterministic Heuristic & Feature Extractor (Zero-Mock)',
       source: isPdf ? 'pdf_native_text' : 'image_stream_scan',
       extractedAt: new Date().toISOString(),
+      passengers: parsed.passengers,
+      transaction_id: parsed.transaction_id,
+      quota: parsed.quota,
+      distance_km: parsed.distance_km,
+      booking_date: parsed.booking_date,
+      ticket_fare: parsed.ticket_fare,
+      convenience_fee: parsed.convenience_fee,
+      total_fare: parsed.total_fare,
     },
   };
 }
@@ -205,11 +221,22 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
     }
   }
 
-  // 6. Passengers
-  const paxRegex = /(\d+)\.\s*([A-Za-z\s]+?)\s+(\d{1,2})\s+([MF])/g;
+  // 6. Detailed Passengers List & Primary Pax
+  const paxRegex = /(\d+)\.\s*([A-Za-z\s]+?)\s+(\d{1,2})\s+([MF])(?:\s+(?:W\s*L\s*\/|\s*CNF|\s*RAC|\s*CAN)[^\n\r]*?)?/gi;
+  // Detailed regex with booking WL vs current WL
+  const detailedPaxRegex = /(\d+)\.\s*([A-Za-z\s]+?)\s+(\d{1,2})\s+([MF])\s*(?:W\s*L\s*\/\s*(\d+))?\s*(?:W\s*L\s*\/\s*(\d+))?/gi;
   let pm: RegExpExecArray | null;
-  const paxes: { num: string; name: string; age: number; gender: string }[] = [];
-  while ((pm = paxRegex.exec(text)) !== null) {
+  const passengersList: {
+    num: number;
+    name: string;
+    age: number;
+    gender: string;
+    booking_status: string;
+    current_status: string;
+    seat?: string;
+  }[] = [];
+
+  while ((pm = detailedPaxRegex.exec(text)) !== null) {
     const rawName = pm[2].replace(/\s+/g, ' ').trim();
     let formattedName = rawName;
     if (!formattedName.includes(' ')) {
@@ -218,19 +245,23 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
         formattedName = `${shahMatch[1]} ${shahMatch[2]}`;
       }
     }
-    paxes.push({
-      num: pm[1],
+    const bWl = pm[5] ? `WL / ${pm[5]}` : 'Waitlisted';
+    const cWl = pm[6] ? `WL / ${pm[6]}` : (pm[5] ? `WL / ${pm[5]}` : 'Waitlisted');
+    passengersList.push({
+      num: parseInt(pm[1], 10),
       name: formattedName,
       age: parseInt(pm[3], 10),
-      gender: pm[4],
+      gender: pm[4] === 'M' ? 'Male' : pm[4] === 'F' ? 'Female' : pm[4],
+      booking_status: bWl,
+      current_status: cWl,
     });
   }
 
   let passenger_name: string | null = null;
   let passenger_age: number | null = null;
-  if (paxes.length > 0) {
-    passenger_name = paxes.map((p) => p.name).join(', ');
-    passenger_age = paxes[0].age;
+  if (passengersList.length > 0) {
+    passenger_name = passengersList.map((p) => p.name).join(', ');
+    passenger_age = passengersList[0].age;
   } else {
     const genPaxMatch = text.match(/(?:passenger|passenger\s*name|name|traveller)[:\s]+([a-zA-Z\s]{3,35})/i);
     if (genPaxMatch && genPaxMatch[1].trim().length > 2) {
@@ -288,6 +319,33 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
     seat_class_coach = latestWl;
   }
 
+  // 8. Financials, Quota, Distance, Transaction
+  const txnMatch = text.match(/Transaction\s*ID\s*:\s*(\d+)/i);
+  const transaction_id = txnMatch ? txnMatch[1] : null;
+
+  const quotaMatch = text.match(/GENERAL\s*\(GN\)|TATKAL\s*\(CK\)|PREMIUM\s*TATKAL\s*\(PT\)|LADIES\s*\(LD\)/i);
+  const quota = quotaMatch ? quotaMatch[0].replace(/\s+/g, ' ').trim() : (text.includes('GENERAL') ? 'GENERAL (GN)' : null);
+
+  const distMatch = text.match(/(\d+\s*KM)/i);
+  const distance_km = distMatch ? distMatch[1].replace(/\s+/g, ' ').trim() : null;
+
+  const bDateMatch = text.match(/Booking\s*Date[\s\S]*?(\d{1,2}-[A-Za-z]{3}-\d{4}\s*\d{2}:\d{2}(?::\d{2})?\s*HRS)/i);
+  const booking_date = bDateMatch ? bDateMatch[1].replace(/\s+/g, ' ').trim() : null;
+
+  // Fares
+  let ticket_fare: string | null = null;
+  let convenience_fee: string | null = null;
+  let total_fare: string | null = null;
+
+  const fareMatches = text.match(/₹\s*([0-9,]+\.\d{2})/g);
+  if (fareMatches && fareMatches.length >= 3) {
+    ticket_fare = fareMatches[0].replace(/\s+/g, '');
+    convenience_fee = fareMatches[1].replace(/\s+/g, '');
+    total_fare = fareMatches[2].replace(/\s+/g, '');
+  } else if (fareMatches && fareMatches.length > 0) {
+    total_fare = fareMatches[0].replace(/\s+/g, '');
+  }
+
   // Calculate truthful confidence score based on extracted fields
   let foundCount = 0;
   if (passenger_name) foundCount++;
@@ -312,6 +370,14 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
     arrival_datetime,
     seat_class_coach,
     extraction_confidence,
+    passengers: passengersList,
+    transaction_id,
+    quota,
+    distance_km,
+    booking_date,
+    ticket_fare,
+    convenience_fee,
+    total_fare,
   };
 }
 

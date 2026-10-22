@@ -17,38 +17,50 @@ export async function GET(
     const { id } = await params;
     const supabase = getServiceRoleClient();
 
-    const { data: ticket, error } = await supabase
-      .from('tickets')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
+    let ticketData: any = null;
+    try {
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (!error && data) {
+        ticketData = data;
+      }
+    } catch {}
 
-    if (error || !ticket) {
+    if (!ticketData) {
+      const { localDb } = await import('@/lib/local-store');
+      const localTickets = localDb.getTickets();
+      ticketData = localTickets.find((t) => t.id === id) || null;
+    }
+
+    if (!ticketData) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
 
     // Access control: User can only see their own ticket, Admin can see all
-    if (ticket.user_id !== session.userId && session.role !== 'admin') {
+    if (ticketData.user_id !== session.userId && session.role !== 'admin') {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
     // Generate fresh signed URL with 5-minute expiration
-    const signedUrl = await getSignedFileUrl(ticket.file_path);
+    const signedUrl = await getSignedFileUrl(ticketData.file_path);
 
     // If an admin is inspecting another user's ticket, record audit log
-    if (session.role === 'admin' && ticket.user_id !== session.userId) {
+    if (session.role === 'admin' && ticketData.user_id !== session.userId) {
       await logAuditEvent({
         userId: session.userId,
         action: 'admin_view',
-        targetTicketId: ticket.id,
-        metadata: { ticketOwnerId: ticket.user_id, pnr: ticket.pnr_booking_id },
+        targetTicketId: ticketData.id,
+        metadata: { ticketOwnerId: ticketData.user_id, pnr: ticketData.pnr_booking_id },
       });
     }
 
     return NextResponse.json({
       success: true,
       ticket: {
-        ...ticket,
+        ...ticketData,
         signedUrl,
       },
     });

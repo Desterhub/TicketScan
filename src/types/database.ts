@@ -36,6 +36,16 @@ export interface TamperSignal {
   score_impact?: number;
 }
 
+export interface PassengerItem {
+  num: number | string;
+  name: string;
+  age?: number | null;
+  gender?: string | null;
+  booking_status?: string | null;
+  current_status?: string | null;
+  seat?: string | null;
+}
+
 export interface ExtractedTicketData {
   passenger_name: string | null;
   passenger_age: number | null;
@@ -49,6 +59,14 @@ export interface ExtractedTicketData {
   arrival_datetime: string | null;
   seat_class_coach: string | null;
   extraction_confidence: number;
+  passengers?: PassengerItem[];
+  booking_date?: string | null;
+  transaction_id?: string | null;
+  quota?: string | null;
+  distance_km?: string | null;
+  total_fare?: string | null;
+  ticket_fare?: string | null;
+  convenience_fee?: string | null;
 }
 
 export interface Ticket {

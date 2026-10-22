@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/ui/Navbar';
 import { TicketCard } from '@/components/ticket-card/TicketCard';
+import { PassengerManifestTable } from '@/components/ticket/PassengerManifestTable';
 import { Ticket, TransportMode, BookingStatus } from '@/types/database';
 import {
   FileText,
@@ -12,7 +13,7 @@ import {
   Edit3,
   Trash2,
   ExternalLink,
-  Code2,
+  Users,
   Check,
   X,
   Loader2,
@@ -29,7 +30,7 @@ function TicketDetailContent() {
   const [ticket, setTicket] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'forensics' | 'document' | 'rawJson'>('forensics');
+  const [activeTab, setActiveTab] = useState<'manifest' | 'forensics' | 'document'>('manifest');
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -344,15 +345,27 @@ function TicketDetailContent() {
           </form>
         )}
 
-        {/* Detailed Tabs: Forensics, Original Document, Raw AI JSON */}
+        {/* Detailed Tabs: Passenger Manifest, Forensics, Original Document */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-2 flex-wrap">
+            <button
+              onClick={() => setActiveTab('manifest')}
+              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition ${
+                activeTab === 'manifest'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Passenger Manifest & Journey Details</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('forensics')}
               className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition ${
                 activeTab === 'forensics'
-                  ? 'bg-amber-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
               <ShieldCheck className="w-4 h-4" />
@@ -363,28 +376,21 @@ function TicketDetailContent() {
               onClick={() => setActiveTab('document')}
               className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition ${
                 activeTab === 'document'
-                  ? 'bg-amber-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
               <FileText className="w-4 h-4" />
-              <span>Original Document (Signed 5m URL)</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('rawJson')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition ${
-                activeTab === 'rawJson'
-                  ? 'bg-amber-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Code2 className="w-4 h-4" />
-              <span>Raw AI JSON Audit Log</span>
+              <span>Original Document</span>
             </button>
           </div>
 
-          {/* TAB 1: Forensics */}
+          {/* TAB 1: Passenger Manifest & Journey Breakdown */}
+          {activeTab === 'manifest' && (
+            <PassengerManifestTable ticket={ticket} />
+          )}
+
+          {/* TAB 2: Forensics */}
           {activeTab === 'forensics' && (
             <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
               <div className="flex items-center justify-between">
@@ -437,7 +443,7 @@ function TicketDetailContent() {
             </div>
           )}
 
-          {/* TAB 2: Document */}
+          {/* TAB 3: Document */}
           {activeTab === 'document' && (
             <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
               <div className="flex items-center justify-between">
@@ -478,13 +484,6 @@ function TicketDetailContent() {
                   No preview available.
                 </div>
               )}
-            </div>
-          )}
-
-          {/* TAB 3: Raw AI JSON */}
-          {activeTab === 'rawJson' && (
-            <div className="p-6 rounded-2xl bg-slate-950 border border-slate-800 font-mono text-xs overflow-x-auto text-emerald-400">
-              <pre>{JSON.stringify(ticket.raw_extraction_json, null, 2)}</pre>
             </div>
           )}
         </div>

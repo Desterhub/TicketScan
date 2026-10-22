@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/ui/Navbar';
 import { UploadZone } from '@/components/upload/UploadZone';
 import { TicketCard } from '@/components/ticket-card/TicketCard';
+import { PassengerManifestTable } from '@/components/ticket/PassengerManifestTable';
 import { Ticket } from '@/types/database';
 import { ShieldCheck, Sparkles, Check, ArrowRight, RotateCcw } from 'lucide-react';
 
@@ -113,6 +114,9 @@ export default function UploadPage() {
 
             {/* Display Boarding Pass Card */}
             <TicketCard ticket={processedTicket} />
+
+            {/* Display Detailed Passenger Manifest & Journey Breakdown */}
+            <PassengerManifestTable ticket={processedTicket} />
           </div>
         )}
       </main>

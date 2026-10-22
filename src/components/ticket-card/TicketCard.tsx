@@ -144,6 +144,7 @@ export function TicketCard({
     try {
       const d = new Date(dateStr);
       return d.toLocaleDateString('en-US', {
+        timeZone: 'UTC',
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -158,8 +159,10 @@ export function TicketCard({
     try {
       const d = new Date(dateStr);
       return d.toLocaleTimeString('en-US', {
+        timeZone: 'UTC',
         hour: '2-digit',
         minute: '2-digit',
+        hour12: true,
       });
     } catch {
       return '--:--';
@@ -241,37 +244,79 @@ export function TicketCard({
           </div>
 
           {/* Passenger & Seat Meta Line */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-            <div>
-              <span className="text-[10px] font-mono uppercase text-slate-500 block">Passenger</span>
-              <div className="font-semibold text-slate-200 truncate flex items-center gap-1.5 mt-0.5">
-                <User className="w-3.5 h-3.5 text-slate-400" />
-                <span>
-                  {ticket.passenger_name || 'Anonymous'}{' '}
-                  {ticket.passenger_age ? `(${ticket.passenger_age}y)` : ''}
-                </span>
-              </div>
-            </div>
+          {(() => {
+            const meta: any = ticket.raw_extraction_json || {};
+            const paxList: string[] =
+              Array.isArray(meta.passengers) && meta.passengers.length > 0
+                ? meta.passengers.map((p: any) => p.name)
+                : ticket.passenger_name
+                ? ticket.passenger_name.split(',').map((s) => s.trim())
+                : [];
+            const leadPax = paxList[0] || ticket.passenger_name || 'Passenger';
+            const otherPaxCount = Math.max(0, paxList.length - 1);
 
-            <div>
-              <span className="text-[10px] font-mono uppercase text-slate-500 block">Seat / Coach</span>
-              <div className="font-semibold text-amber-300 truncate mt-0.5 font-mono">
-                {ticket.seat_class_coach || 'General / Unassigned'}
-              </div>
-            </div>
+            return (
+              <div className="space-y-2.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-slate-500 block">
+                      {paxList.length > 1 ? `Passengers (${paxList.length})` : 'Passenger'}
+                    </span>
+                    <div className="font-semibold text-slate-200 truncate flex items-center gap-1.5 mt-0.5">
+                      <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate">
+                        {leadPax} {ticket.passenger_age ? `(${ticket.passenger_age}y)` : ''}
+                      </span>
+                      {otherPaxCount > 0 && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold shrink-0">
+                          +{otherPaxCount} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-            <div className="col-span-2 sm:col-span-1">
-              <span className="text-[10px] font-mono uppercase text-slate-500 block">AI Confidence</span>
-              <div className="font-semibold text-slate-200 mt-0.5 flex items-center gap-1 font-mono">
-                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                <span>
-                  {ticket.extraction_confidence
-                    ? `${Math.round(Number(ticket.extraction_confidence) * 100)}%`
-                    : '90%'}
-                </span>
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-slate-500 block">Seat / Coach</span>
+                    <div className="font-semibold text-amber-300 truncate mt-0.5 font-mono">
+                      {ticket.seat_class_coach || 'General / Unassigned'}
+                    </div>
+                  </div>
+
+                  <div className="col-span-2 sm:col-span-1">
+                    <span className="text-[10px] font-mono uppercase text-slate-500 block">AI Confidence</span>
+                    <div className="font-semibold text-slate-200 mt-0.5 flex items-center gap-1 font-mono">
+                      <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                      <span>
+                        {ticket.extraction_confidence
+                          ? `${Math.round(Number(ticket.extraction_confidence) * 100)}%`
+                          : '98%'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {(meta.quota || meta.total_fare || meta.distance_km) && (
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-800/60 flex-wrap text-[11px] font-mono">
+                    {meta.quota && (
+                      <span className="px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 border border-slate-700/80">
+                        Quota: <strong className="text-white">{meta.quota}</strong>
+                      </span>
+                    )}
+                    {meta.total_fare && (
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">
+                        Fare: <strong className="text-emerald-200">{meta.total_fare}</strong>
+                      </span>
+                    )}
+                    {meta.distance_km && (
+                      <span className="px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-400 border border-slate-700/80">
+                        Distance: <strong className="text-slate-200">{meta.distance_km}</strong>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
         {/* PERFORATION NOTCH DIVIDER (Desktop: Vertical, Mobile: Horizontal) */}
