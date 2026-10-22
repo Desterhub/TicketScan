@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, VolumeX, ArrowRight } from 'lucide-react';
+import { Volume2, VolumeX, ArrowRight, Play, Sparkles } from 'lucide-react';
 import { LoginForm } from '@/components/auth/LoginForm';
 
 interface IntroSplashProps {
@@ -14,64 +14,67 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
+  const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [showSkip, setShowSkip] = useState(false);
+  const [showSkip, setShowSkip] = useState(true);
   const [isEmerging, setIsEmerging] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [isSkipped, setIsSkipped] = useState(false);
+  const [needsUserTap, setNeedsUserTap] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
 
-  // 1. Accessibility & Show-Once verification
+  // Play video safely handling browser autoplay restrictions (e.g. iOS Low Power Mode)
+  const attemptPlay = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      video.muted = isMuted;
+      await video.play();
+      setIsPlaying(true);
+      setHasStarted(true);
+      setNeedsUserTap(false);
+    } catch (err) {
+      console.warn('Autoplay restricted by browser/Low Power Mode, awaiting user tap:', err);
+      // Browser blocked autoplay (common on iOS when Low Power Mode is ON)
+      setNeedsUserTap(true);
+      setIsPlaying(false);
+    }
+  }, [isMuted]);
+
   useEffect(() => {
-    // If not forced, check sessionStorage
-    if (!forcePlay && typeof window !== 'undefined') {
-      const alreadyPlayed = sessionStorage.getItem('introPlayed');
-      if (alreadyPlayed === 'true') {
-        setIsSkipped(true);
-        router.replace('/login');
-        return;
-      }
+    attemptPlay();
+  }, [attemptPlay]);
 
-      // Check prefers-reduced-motion
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (prefersReducedMotion) {
-        sessionStorage.setItem('introPlayed', 'true');
-        setIsSkipped(true);
-        router.replace('/login');
-        return;
-      }
+  // Handle user tap anywhere to start/resume video
+  const handleScreenTap = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          setHasStarted(true);
+          setNeedsUserTap(false);
+        })
+        .catch((err) => {
+          console.error('Play failed on user tap:', err);
+        });
     }
+  };
 
-    // Delay skip button appearance by 1.5s
-    const skipTimer = setTimeout(() => {
-      setShowSkip(true);
-    }, 1500);
-
-    // 3-second fallback timer: if video hasn't started playing, redirect to /login
-    const fallbackTimer = setTimeout(() => {
-      if (videoRef.current && videoRef.current.currentTime === 0) {
-        console.warn('Intro video autoplay timed out. Redirecting to login directly.');
-        handleFinish();
-      }
-    }, 3000);
-
-    return () => {
-      clearTimeout(skipTimer);
-      clearTimeout(fallbackTimer);
-    };
-  }, [forcePlay, router]);
-
-  // Finish and mark intro as played
+  // Finish and proceed to login
   const handleFinish = () => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('introPlayed', 'true');
-    }
+    if (isCompleted) return;
     setIsCompleted(true);
     router.push('/login');
   };
 
   // Skip button click
-  const handleSkip = () => {
+  const handleSkip = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (videoRef.current) {
       videoRef.current.pause();
     }
@@ -79,7 +82,8 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
   };
 
   // Toggle audio
-  const toggleMute = () => {
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (videoRef.current) {
       const newMuted = !isMuted;
       videoRef.current.muted = newMuted;
@@ -87,10 +91,14 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
     }
   };
 
-  // Time update listener for the 13s doorway transition
+  // Time update listener for the 13s doorway transition & smooth progress
   const handleTimeUpdate = () => {
-    if (!videoRef.current) return;
-    const time = videoRef.current.currentTime;
+    const video = videoRef.current;
+    if (!video) return;
+    const time = video.currentTime;
+    const duration = video.duration || 16;
+
+    setVideoProgress((time / duration) * 100);
 
     if (time > 0.2 && !hasStarted) {
       setHasStarted(true);
@@ -101,38 +109,76 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
       setIsEmerging(true);
     }
 
-    // 15.5s: Complete transition cleanly to login
-    if (time >= 15.5 && !isCompleted) {
+    // Complete transition cleanly once video ends or reaches final 0.5s
+    if (duration > 0 && time >= duration - 0.5 && !isCompleted) {
       handleFinish();
     }
   };
 
-  if (isSkipped) {
-    return null;
-  }
-
   return (
-    <div className="relative w-screen h-[100dvh] overflow-hidden bg-black select-none">
+    <div
+      onClick={handleScreenTap}
+      className="relative w-screen h-[100dvh] overflow-hidden bg-black select-none cursor-pointer"
+    >
       {/* Video Background Layer */}
       <div className="absolute inset-0 bg-black z-0" />
 
-      {/* High-Definition Video Element (Native hardware decoding & smooth GPU filtering) */}
+      {/* High-Definition Video Element (PlaysInline for mobile iOS/Android) */}
       <motion.video
         ref={videoRef}
         autoPlay
         muted={isMuted}
         playsInline
+        webkit-playsinline="true"
         preload="auto"
+        onPlay={() => {
+          setIsPlaying(true);
+          setNeedsUserTap(false);
+        }}
+        onPause={() => setIsPlaying(false)}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleFinish}
         animate={{
           opacity: isCompleted ? 0 : isEmerging ? 0.35 : 1,
         }}
         transition={{ duration: 1.8, ease: 'easeOut' }}
-        className="absolute inset-0 w-full h-full object-contain sm:object-cover object-center pointer-events-none z-0"
+        className="absolute inset-0 w-full h-full object-contain sm:object-cover object-center z-0"
       >
         <source src="/videos/intro.mp4" type="video/mp4" />
       </motion.video>
+
+      {/* Center "Tap to Play" overlay if browser (e.g. iOS Low Power Mode) pauses autoplay */}
+      <AnimatePresence>
+        {needsUserTap && !isPlaying && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-6 text-center"
+          >
+            <div className="relative group">
+              <div className="absolute -inset-4 rounded-full bg-amber-500/30 blur-xl animate-pulse" />
+              <button
+                type="button"
+                onClick={handleScreenTap}
+                className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center text-slate-950 shadow-2xl shadow-amber-500/50 hover:scale-105 active:scale-95 transition"
+              >
+                <Play className="w-9 h-9 sm:w-10 sm:h-10 fill-current translate-x-1" />
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-2 max-w-xs">
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center justify-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-400" />
+                <span>TicketScan Portal</span>
+              </h2>
+              <p className="text-xs text-slate-300 font-mono">
+                Tap anywhere on screen to begin cinematic journey
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Atmospheric Portal Glow & Ambient Vignette during Doorway emergence */}
       <motion.div
@@ -143,7 +189,7 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
         className="absolute inset-0 pointer-events-none z-10 bg-radial from-amber-500/20 via-slate-950/70 to-slate-950/95"
       />
 
-      {/* Emergent Functional Login Form (Portal Transition) - Fully Mobile Responsive */}
+      {/* Emergent Functional Login Form (Portal Transition) */}
       <AnimatePresence>
         {isEmerging && (
           <motion.div
@@ -154,6 +200,7 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
               duration: 1.8,
               ease: [0.16, 1, 0.3, 1],
             }}
+            onClick={(e) => e.stopPropagation()}
             className="absolute inset-0 z-20 flex items-center justify-center p-3 sm:p-4 max-h-[100dvh] overflow-y-auto"
           >
             <div className="w-full max-w-sm sm:max-w-md portal-glow-rim rounded-2xl my-auto">
@@ -168,7 +215,7 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
         <button
           type="button"
           onClick={toggleMute}
-          className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-950/80 hover:bg-slate-900 border border-slate-700/70 text-slate-300 hover:text-white backdrop-blur-md text-xs font-mono transition shadow-lg cursor-pointer"
+          className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-950/85 hover:bg-slate-900 border border-slate-700/80 text-slate-300 hover:text-white backdrop-blur-md text-xs font-mono transition shadow-lg cursor-pointer"
           title={isMuted ? 'Enable Sound' : 'Mute Sound'}
         >
           {isMuted ? (
@@ -206,6 +253,14 @@ export function IntroSplash({ forcePlay = false }: IntroSplashProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Subtle Progress Bar along the bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-900/80 z-30 pointer-events-none">
+        <div
+          className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-150"
+          style={{ width: `${videoProgress}%` }}
+        />
+      </div>
     </div>
   );
 }

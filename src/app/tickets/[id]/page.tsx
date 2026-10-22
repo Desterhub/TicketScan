@@ -151,7 +151,7 @@ function TicketDetailContent() {
     <div className="min-h-screen bg-[#090e17] text-white flex flex-col">
       <Navbar user={user} />
 
-      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full space-y-8">
+      <main className="flex-1 max-w-6xl mx-auto px-3.5 sm:px-6 py-5 sm:py-8 w-full space-y-6 sm:space-y-8">
         {/* Top Controls */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <button
@@ -347,41 +347,44 @@ function TicketDetailContent() {
 
         {/* Detailed Tabs: Passenger Manifest, Forensics, Original Document */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-2 flex-wrap">
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto scrollbar-none flex-nowrap py-1">
             <button
               onClick={() => setActiveTab('manifest')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition shrink-0 whitespace-nowrap ${
                 activeTab === 'manifest'
                   ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
-              <Users className="w-4 h-4" />
-              <span>Passenger Manifest & Journey Details</span>
+              <Users className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden">Manifest & Seats</span>
+              <span className="hidden sm:inline">Passenger Manifest & Journey Details</span>
             </button>
 
             <button
               onClick={() => setActiveTab('forensics')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition shrink-0 whitespace-nowrap ${
                 activeTab === 'forensics'
                   ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Forensic & Authenticity Signals</span>
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden">Forensic Signals</span>
+              <span className="hidden sm:inline">Forensic & Authenticity Signals</span>
             </button>
 
             <button
               onClick={() => setActiveTab('document')}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition shrink-0 whitespace-nowrap ${
                 activeTab === 'document'
                   ? 'bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
-              <FileText className="w-4 h-4" />
-              <span>Original Document</span>
+              <FileText className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden">Original Doc</span>
+              <span className="hidden sm:inline">Original Document</span>
             </button>
           </div>
 

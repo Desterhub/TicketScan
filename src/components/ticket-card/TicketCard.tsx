@@ -211,40 +211,40 @@ export function TicketCard({
           </div>
 
           {/* Route Section: Origin -> Destination */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-4 py-2 border-y border-slate-800/80">
+          <div className="grid grid-cols-[1fr,auto,1fr] sm:grid-cols-3 items-center gap-2 sm:gap-4 py-2.5 border-y border-slate-800/80">
             {/* Origin */}
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 min-w-0">
               <span className="text-[10px] font-mono uppercase text-slate-500 flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-amber-400" /> Origin
+                <MapPin className="w-3 h-3 text-amber-400 shrink-0" /> Origin
               </span>
-              <div className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+              <div className="text-base sm:text-xl font-extrabold text-white tracking-tight truncate">
                 {ticket.boarding_place || 'Origin TBD'}
               </div>
-              <div className="text-xs font-mono text-slate-400">
+              <div className="text-[11px] sm:text-xs font-mono text-slate-400 truncate">
                 {formatDate(ticket.departure_datetime)} • {formatTime(ticket.departure_datetime)}
               </div>
             </div>
 
             {/* Direction Arrow */}
-            <div className="hidden sm:flex flex-col items-center justify-center space-y-1">
-              <span className="text-[10px] font-mono text-slate-500 tracking-widest uppercase">
+            <div className="flex flex-col items-center justify-center px-1 sm:px-2">
+              <span className="text-[9px] sm:text-[10px] font-mono text-slate-500 tracking-wider uppercase">
                 Direct
               </span>
-              <div className="w-full flex items-center gap-1">
-                <div className="h-0.5 w-full bg-slate-700 border-t border-dashed border-slate-600" />
-                <div className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+              <div className="flex items-center gap-1 w-10 sm:w-20">
+                <div className="h-0.5 flex-1 bg-slate-700 border-t border-dashed border-slate-600" />
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-400 shrink-0" />
               </div>
             </div>
 
             {/* Destination */}
-            <div className="space-y-0.5 sm:text-right">
-              <span className="text-[10px] font-mono uppercase text-slate-500 flex items-center sm:justify-end gap-1">
-                <MapPin className="w-3 h-3 text-sky-400" /> Destination
+            <div className="space-y-0.5 text-right min-w-0">
+              <span className="text-[10px] font-mono uppercase text-slate-500 flex items-center justify-end gap-1">
+                <MapPin className="w-3 h-3 text-sky-400 shrink-0" /> Destination
               </span>
-              <div className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+              <div className="text-base sm:text-xl font-extrabold text-white tracking-tight truncate">
                 {ticket.destination_place || 'Destination TBD'}
               </div>
-              <div className="text-xs font-mono text-slate-400">
+              <div className="text-[11px] sm:text-xs font-mono text-slate-400 truncate">
                 {formatDate(ticket.arrival_datetime)} • {formatTime(ticket.arrival_datetime)}
               </div>
             </div>

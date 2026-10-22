@@ -91,11 +91,11 @@ export default function UploadPage() {
                 <h2 className="text-2xl font-bold text-white">Review Extracted Boarding Pass</h2>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setProcessedTicket(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Upload Another</span>
@@ -104,7 +104,7 @@ export default function UploadPage() {
                 <button
                   type="button"
                   onClick={() => router.push(`/tickets/${processedTicket.id}`)}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-amber-300 transition"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-amber-300 transition"
                 >
                   <span>Save & Inspect Full Forensics</span>
                   <ArrowRight className="w-3.5 h-3.5" />
