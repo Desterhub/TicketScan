@@ -143,11 +143,11 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
   // 3. Carrier / Train / Flight / Bus Name
   let carrier_name: string | null = null;
   if (transport_mode === 'train') {
-    // Train format: 11007 / DECCAN EXPRESS
-    const trainMatch = text.match(/(\d{5})\s*\/\s*([A-Za-z\s]+?)(?=\s*(?:CH\s*A\s*IR|CHAIR|\(CC\)|GENERAL|GN|Quota|\n|$))/i);
+    // Train format: 12935 / BDTS ST SF EXP or 11007 / DECCAN EXPRESS or 12935/BDTS ST SF EXP
+    const trainMatch = text.match(/(\d{5})\s*[\/-]\s*([A-Za-z0-9\s]+?)(?=\s*(?:CHAIR|CH\s*A\s*IR|\(CC\)|EXECUTIVE|SLEEPER|AC\s*\d|2S|GN|GENERAL|Quota|\n|$))/i);
     if (trainMatch) {
       const trainNo = trainMatch[1];
-      let trainName = trainMatch[2].replace(/\s+/g, ' ').replace(/(\b[A-Z]{3,})\s+([A-Z]\b)/g, '$1$2').trim();
+      let trainName = trainMatch[2].replace(/\s+/g, ' ').trim();
       trainName = trainName.replace(/DECCA\s*N/i, 'DECCAN');
       carrier_name = `${trainNo} / ${trainName}`;
     } else if (/irctc|indian railways/i.test(fullText)) {
@@ -164,38 +164,56 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
   // 4. Stations / Route
   let boarding_place: string | null = null;
   let destination_place: string | null = null;
-  const stationMatches: string[] = [];
+
+  // Primary: Extract from journey header block (Booked From -> Start Date / Passenger Details)
+  const headerMatch = text.match(/Booked\s*from[\s\S]*?(?=(?:Start\s*Date|Departure|PNR|Quota|Passenger\s*Details))/i);
+  const headerSection = headerMatch ? headerMatch[0] : text;
+
+  const rawStationMatches: string[] = [];
   const stRegex = /([A-Za-z\s]{3,35}\s*\([A-Z\s]{2,6}\))/g;
   let sm: RegExpExecArray | null;
-  while ((sm = stRegex.exec(text)) !== null) {
-    const rawSt = sm[1].replace(/\s+/g, ' ').trim();
+  while ((sm = stRegex.exec(headerSection)) !== null) {
+    let rawSt = sm[1].replace(/\s+/g, ' ').trim();
     if (
       !rawSt.includes('Reservation') &&
       !rawSt.includes('Electronic') &&
       !rawSt.includes('Slip') &&
       !rawSt.includes('GENERAL') &&
+      !rawSt.includes('TATKAL') &&
       !rawSt.includes('GN') &&
-      !rawSt.includes('CC')
+      !rawSt.includes('CC') &&
+      !rawSt.includes('NCH') &&
+      !rawSt.includes('IRCTC') &&
+      !rawSt.includes('GSTIN') &&
+      !rawSt.includes('SAC') &&
+      !rawSt.includes('Consumer') &&
+      !rawSt.includes('Helpline')
     ) {
-      stationMatches.push(rawSt);
+      // Clean up common station typo or ligature artifacts
+      rawSt = rawSt.replace(/\(\s*([A-Za-z]+)\s+([A-Za-z]+)\s*\)/g, '($1$2)').replace(/\s+/g, ' ');
+      rawSt = rawSt.replace(/CSHIVAJI/i, 'C SHIVAJI');
+      rawSt = rawSt.replace(/M\s*AH\s*T/i, 'MAH T');
+      rawSt = rawSt.replace(/CSM\s*T/i, 'CSMT');
+      rawSt = rawSt.replace(/^(?:User|Booked|from|To|\s)+/i, '').trim();
+      if (rawSt.length > 5) {
+        rawStationMatches.push(rawSt);
+      }
     }
   }
 
-  if (stationMatches.length >= 2) {
-    const cleanSt = (st: string) =>
-      st.replace(/\(\s*([A-Z]+)\s+([A-Z]+)\s*\)/, '($1$2)').replace(/\s+/g, ' ').trim();
-    boarding_place = cleanSt(stationMatches[stationMatches.length - 2] || stationMatches[0]);
-    destination_place = cleanSt(stationMatches[stationMatches.length - 1] || stationMatches[1]);
-  } else if (stationMatches.length === 1) {
-    boarding_place = stationMatches[0];
+  // Extract unique stations in order of appearance
+  const uniqueStations: string[] = [];
+  for (const st of rawStationMatches) {
+    if (!uniqueStations.includes(st)) {
+      uniqueStations.push(st);
+    }
   }
 
-  // Specific IRCTC known station codes if present in document
-  if (text.includes('CSMT') || text.includes('CSM T')) {
-    boarding_place = 'C SHIVAJI MAH T (CSMT)';
-  }
-  if (text.includes('LNL')) {
-    destination_place = 'LONAVALA (LNL)';
+  if (uniqueStations.length >= 2) {
+    boarding_place = uniqueStations[0];
+    destination_place = uniqueStations[uniqueStations.length - 1];
+  } else if (uniqueStations.length === 1) {
+    boarding_place = uniqueStations[0];
   }
 
   // 5. Departure & Arrival Times & Dates
@@ -221,10 +239,8 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
     }
   }
 
-  // 6. Detailed Passengers List & Primary Pax
-  const paxRegex = /(\d+)\.\s*([A-Za-z\s]+?)\s+(\d{1,2})\s+([MF])(?:\s+(?:W\s*L\s*\/|\s*CNF|\s*RAC|\s*CAN)[^\n\r]*?)?/gi;
-  // Detailed regex with booking WL vs current WL
-  const detailedPaxRegex = /(\d+)\.\s*([A-Za-z\s]+?)\s+(\d{1,2})\s+([MF])\s*(?:W\s*L\s*\/\s*(\d+))?\s*(?:W\s*L\s*\/\s*(\d+))?/gi;
+  // 6. Detailed Passengers List
+  const paxLineRegex = /(\d+)\.\s*([A-Za-z][A-Za-z\s]*?)\s+(\d{1,2})\s+([MF])\s+([^\n\r#]+)/g;
   let pm: RegExpExecArray | null;
   const passengersList: {
     num: number;
@@ -236,24 +252,67 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
     seat?: string;
   }[] = [];
 
-  while ((pm = detailedPaxRegex.exec(text)) !== null) {
-    const rawName = pm[2].replace(/\s+/g, ' ').trim();
-    let formattedName = rawName;
-    if (!formattedName.includes(' ')) {
-      const shahMatch = formattedName.match(/^([A-Z]+)(SHAH|PATEL|MEHTA|JAIN|SINGH|KUMAR|SHARMA)$/i);
-      if (shahMatch) {
-        formattedName = `${shahMatch[1]} ${shahMatch[2]}`;
-      }
+  const confirmedCoaches: string[] = [];
+  const confirmedSeats: string[] = [];
+
+  while ((pm = paxLineRegex.exec(text)) !== null) {
+    const num = parseInt(pm[1], 10);
+    let name = pm[2].trim().replace(/\s+/g, ' ');
+    if (!name.includes(' ')) {
+      name = name
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/([A-Z]{3,})(SHAH|PATEL|MEHTA|JAIN|SINGH|KUMAR|SHARMA)/i, '$1 $2');
     }
-    const bWl = pm[5] ? `WL / ${pm[5]}` : 'Waitlisted';
-    const cWl = pm[6] ? `WL / ${pm[6]}` : (pm[5] ? `WL / ${pm[5]}` : 'Waitlisted');
+    const age = parseInt(pm[3], 10);
+    const gender = pm[4] === 'M' ? 'Male' : pm[4] === 'F' ? 'Female' : pm[4];
+    const rest = pm[5].trim();
+
+    let booking_status = 'Confirmed';
+    let current_status = 'Confirmed';
+    let seat: string | undefined = undefined;
+
+    // Check for Confirmed with Coach and Seat e.g. CNF/C4/27/NO CHOICE
+    const cnfMatch = rest.match(/CNF\s*[\/\s]\s*([A-Za-z0-9]+)\s*[\/\s]\s*(\d+)/i);
+    // Check for Waitlist e.g. W L/40 W L/25
+    const wlMatches = rest.match(/W\s*L\s*[\/\s]\s*(\d+)/gi);
+    // Check for RAC e.g. RAC 12 RAC 5
+    const racMatches = rest.match(/RAC\s*[\/\s]?\s*(\d+)/gi);
+
+    if (cnfMatch) {
+      const coach = cnfMatch[1].toUpperCase();
+      const seatNo = cnfMatch[2];
+      seat = `${coach}/${seatNo}`;
+      booking_status = 'Confirmed';
+      current_status = `CNF / ${coach} / ${seatNo}`;
+      if (!confirmedCoaches.includes(coach)) confirmedCoaches.push(coach);
+      confirmedSeats.push(seatNo);
+    } else if (wlMatches && wlMatches.length > 0) {
+      const parseWl = (s: string) => {
+        const numMatch = s.match(/\d+/);
+        return numMatch ? `WL / ${numMatch[0]}` : s;
+      };
+      booking_status = parseWl(wlMatches[0]);
+      current_status = parseWl(wlMatches[wlMatches.length - 1]);
+    } else if (racMatches && racMatches.length > 0) {
+      const parseRac = (s: string) => {
+        const numMatch = s.match(/\d+/);
+        return numMatch ? `RAC / ${numMatch[0]}` : s;
+      };
+      booking_status = parseRac(racMatches[0]);
+      current_status = parseRac(racMatches[racMatches.length - 1]);
+    } else if (/CNF|CONFIRMED/i.test(rest)) {
+      booking_status = 'Confirmed';
+      current_status = 'Confirmed';
+    }
+
     passengersList.push({
-      num: parseInt(pm[1], 10),
-      name: formattedName,
-      age: parseInt(pm[3], 10),
-      gender: pm[4] === 'M' ? 'Male' : pm[4] === 'F' ? 'Female' : pm[4],
-      booking_status: bWl,
-      current_status: cWl,
+      num,
+      name,
+      age,
+      gender,
+      booking_status,
+      current_status,
+      seat,
     });
   }
 
@@ -269,18 +328,33 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
     }
   }
 
-  // 7. Booking Status & Seat/Coach
+  // 7. Overall Booking Status & Seat/Coach
   let booking_status: BookingStatus = 'unknown';
-  let seat_class_coach: string | null = null;
 
-  if (/W\s*L\s*\/\s*\d+|waitlisted/i.test(text)) {
-    booking_status = 'waitlisted';
-  } else if (/rac/i.test(text)) {
-    booking_status = 'rac';
-  } else if (/cnf|confirmed/i.test(text)) {
-    booking_status = 'confirmed';
-  } else if (/cancelled|canceled/i.test(text)) {
-    booking_status = 'cancelled';
+  if (passengersList.length > 0) {
+    const hasCnf = passengersList.some((p) => /CNF|Confirmed/i.test(p.current_status));
+    const hasRac = passengersList.some((p) => /RAC/i.test(p.current_status));
+    const hasWl = passengersList.some((p) => /W\s*L|Wait/i.test(p.current_status) || /W\s*L|Wait/i.test(p.booking_status));
+
+    if (hasCnf) {
+      booking_status = 'confirmed';
+    } else if (hasRac) {
+      booking_status = 'rac';
+    } else if (hasWl) {
+      booking_status = 'waitlisted';
+    }
+  } else {
+    // If no passenger table, inspect text outside acronym disclaimers
+    const textWithoutAcronyms = text.replace(/Acronyms:[\s\S]*$/i, '');
+    if (/W\s*L\s*\/\s*\d+|waitlisted/i.test(textWithoutAcronyms)) {
+      booking_status = 'waitlisted';
+    } else if (/rac/i.test(textWithoutAcronyms)) {
+      booking_status = 'rac';
+    } else if (/cnf|confirmed/i.test(textWithoutAcronyms)) {
+      booking_status = 'confirmed';
+    } else if (/cancelled|canceled/i.test(textWithoutAcronyms)) {
+      booking_status = 'cancelled';
+    }
   }
 
   // Class detection
@@ -299,24 +373,32 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
     travelClass = 'AC FIRST CLASS (1A)';
   }
 
-  // Current status e.g. WL / 25
-  const currentWlMatch = text.match(/W\s*L\s*\/\s*(\d+)/gi);
-  let latestWl: string | null = null;
-  if (currentWlMatch && currentWlMatch.length > 0) {
-    const numbers = currentWlMatch.map((m) => {
-      const num = m.match(/\d+/);
-      return num ? parseInt(num[0], 10) : 999;
-    });
-    const minWl = Math.min(...numbers);
-    latestWl = `WL / ${minWl}`;
-  }
+  // Seat / Coach formatting
+  let seat_class_coach: string | null = null;
+  if (confirmedSeats.length > 0) {
+    const coachStr = confirmedCoaches.length > 0 ? `Coach ${confirmedCoaches.join(', ')} / ` : '';
+    const seatLabel = confirmedSeats.length > 1 ? `Seats ${confirmedSeats.join(', ')}` : `Seat ${confirmedSeats[0]}`;
+    seat_class_coach = travelClass ? `${travelClass} - ${coachStr}${seatLabel}` : `${coachStr}${seatLabel}`;
+  } else {
+    // Current status e.g. WL / 25
+    const currentWlMatch = text.match(/W\s*L\s*\/\s*(\d+)/gi);
+    let latestWl: string | null = null;
+    if (currentWlMatch && currentWlMatch.length > 0) {
+      const numbers = currentWlMatch.map((m) => {
+        const num = m.match(/\d+/);
+        return num ? parseInt(num[0], 10) : 999;
+      });
+      const minWl = Math.min(...numbers);
+      latestWl = `WL / ${minWl}`;
+    }
 
-  if (travelClass && latestWl) {
-    seat_class_coach = `${travelClass} - ${latestWl}`;
-  } else if (travelClass) {
-    seat_class_coach = travelClass;
-  } else if (latestWl) {
-    seat_class_coach = latestWl;
+    if (travelClass && latestWl) {
+      seat_class_coach = `${travelClass} - ${latestWl}`;
+    } else if (travelClass) {
+      seat_class_coach = travelClass;
+    } else if (latestWl) {
+      seat_class_coach = latestWl;
+    }
   }
 
   // 8. Financials, Quota, Distance, Transaction
@@ -332,18 +414,28 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
   const bDateMatch = text.match(/Booking\s*Date[\s\S]*?(\d{1,2}-[A-Za-z]{3}-\d{4}\s*\d{2}:\d{2}(?::\d{2})?\s*HRS)/i);
   const booking_date = bDateMatch ? bDateMatch[1].replace(/\s+/g, ' ').trim() : null;
 
-  // Fares
+  // Fares: Check with keyword or rupee symbol
   let ticket_fare: string | null = null;
   let convenience_fee: string | null = null;
   let total_fare: string | null = null;
 
-  const fareMatches = text.match(/₹\s*([0-9,]+\.\d{2})/g);
-  if (fareMatches && fareMatches.length >= 3) {
-    ticket_fare = fareMatches[0].replace(/\s+/g, '');
-    convenience_fee = fareMatches[1].replace(/\s+/g, '');
-    total_fare = fareMatches[2].replace(/\s+/g, '');
-  } else if (fareMatches && fareMatches.length > 0) {
-    total_fare = fareMatches[0].replace(/\s+/g, '');
+  const ticketFareMatch = text.match(/Ticket\s*Fare\s*(?:[:₹\s]+)?\s*([0-9,]+\.\d{2})/i);
+  const feeMatch = text.match(/(?:Convenience\s*Fee|IRCTC\s*Fee)[^0-9\n\r]*?([0-9,]+\.\d{2})/i);
+  const totalFareMatch = text.match(/Total\s*(?:Fare|Amount)[^0-9\n\r]*?([0-9,]+\.\d{2})/i);
+
+  if (ticketFareMatch) ticket_fare = `₹${ticketFareMatch[1]}`;
+  if (feeMatch) convenience_fee = `₹${feeMatch[1]}`;
+  if (totalFareMatch) total_fare = `₹${totalFareMatch[1]}`;
+
+  if (!ticket_fare || !total_fare) {
+    const rupeeMatches = text.match(/₹\s*([0-9,]+\.\d{2})/g);
+    if (rupeeMatches && rupeeMatches.length >= 3) {
+      ticket_fare = rupeeMatches[0].replace(/\s+/g, '');
+      convenience_fee = rupeeMatches[1].replace(/\s+/g, '');
+      total_fare = rupeeMatches[2].replace(/\s+/g, '');
+    } else if (rupeeMatches && rupeeMatches.length > 0) {
+      total_fare = rupeeMatches[0].replace(/\s+/g, '');
+    }
   }
 
   // Calculate truthful confidence score based on extracted fields
