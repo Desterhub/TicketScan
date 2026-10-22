@@ -253,3 +253,20 @@ USING (
     (storage.foldername(name))[1] = auth.uid()::text OR public.is_admin()
   )
 );
+
+-- 12. SEED DEFAULT ADMIN USER (Username: tirth | Password: 010205)
+INSERT INTO public.users (id, email, password_hash, full_name, role, is_active)
+VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'tirth@ticketscan.local',
+  '$2b$10$ZJiU3FDQWjgV1KGbgaPfJ.0tJrJ0iGbxzzj0Z3ZwmK1xd3RNdaK3q',
+  'tirth',
+  'admin',
+  true
+)
+ON CONFLICT (email) DO UPDATE SET
+  password_hash = '$2b$10$ZJiU3FDQWjgV1KGbgaPfJ.0tJrJ0iGbxzzj0Z3ZwmK1xd3RNdaK3q',
+  full_name = 'tirth',
+  role = 'admin',
+  is_active = true;
+
