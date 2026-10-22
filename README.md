@@ -14,7 +14,7 @@
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen?style=flat-square)](https://github.com/Desterhub/TicketScan)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)](LICENSE)
 
-[Live Demo](https://ticketscan.onrender.com) · [Key Features](#-core-capabilities) · [System Architecture](#-system-architecture) · [Getting Started](#-getting-started) · [API Reference](#-api-endpoints)
+[Live Demo](https://ticketscan-xndj.onrender.com) · [Key Features](#-core-capabilities) · [System Architecture](#-system-architecture) · [Getting Started](#-getting-started) · [API Reference](#-api-endpoints)
 
 </div>
 
