@@ -25,6 +25,8 @@ interface Props {
 
 export function PassengerManifestTable({ ticket }: Props) {
   const meta: any = ticket.raw_extraction_json || {};
+  const isFlight = ticket.transport_mode === 'flight';
+  const isBus = ticket.transport_mode === 'bus';
 
   // Extract passenger list or build from primary
   const passengers: PassengerItem[] =
@@ -84,7 +86,7 @@ export function PassengerManifestTable({ ticket }: Props) {
     if (s.includes('cnf') || s.includes('confirm')) {
       return (
         <span className="px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono text-[11px] font-bold">
-          {status || 'CNF'}
+          {status || 'CONFIRMED'}
         </span>
       );
     }
@@ -98,7 +100,7 @@ export function PassengerManifestTable({ ticket }: Props) {
     if (s.includes('can')) {
       return (
         <span className="px-2.5 py-1 rounded-md bg-red-500/15 border border-red-500/30 text-red-300 font-mono text-[11px] font-bold">
-          {status || 'CAN'}
+          {status || 'CANCELLED'}
         </span>
       );
     }
@@ -150,7 +152,7 @@ export function PassengerManifestTable({ ticket }: Props) {
                 <th className="py-3 px-5">Age & Gender</th>
                 <th className="py-3 px-5">Booking Status</th>
                 <th className="py-3 px-5">Current Status</th>
-                <th className="py-3 px-5">Coach / Seat / Class</th>
+                <th className="py-3 px-5">{isFlight ? 'Seat / Cabin Class' : 'Coach / Seat / Class'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-slate-200">
@@ -174,17 +176,17 @@ export function PassengerManifestTable({ ticket }: Props) {
                       </div>
                     </td>
                     <td className="py-3.5 px-5 text-slate-300 font-mono">
-                      {p.age ? `${p.age} yrs` : 'Age N/A'}
+                      {p.age ? `${p.age} yrs` : 'Adult'}
                       {p.gender ? ` • ${p.gender}` : ''}
                     </td>
                     <td className="py-3.5 px-5">
-                      {getStatusBadge(p.booking_status || 'WL')}
+                      {getStatusBadge(p.booking_status || 'Confirmed')}
                     </td>
                     <td className="py-3.5 px-5">
-                      {getStatusBadge(p.current_status || p.booking_status || 'WL')}
+                      {getStatusBadge(p.current_status || p.booking_status || 'Confirmed')}
                     </td>
                     <td className="py-3.5 px-5 font-mono font-medium text-amber-300">
-                      {p.seat || ticket.seat_class_coach || 'CHAIR CAR (CC)'}
+                      {p.seat ? (isFlight ? `Seat ${p.seat}` : p.seat) : (ticket.seat_class_coach || 'Assigned')}
                     </td>
                   </tr>
                 ))
@@ -215,19 +217,23 @@ export function PassengerManifestTable({ ticket }: Props) {
             <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
               <span className="text-slate-400">Ticket Base Fare</span>
               <span className="font-mono font-semibold text-slate-200">
-                {meta.ticket_fare || '₹1,080.00'}
+                {meta.ticket_fare || meta.total_fare || 'N/A'}
               </span>
             </div>
-            <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-              <span className="text-slate-400">IRCTC Convenience Fee</span>
-              <span className="font-mono font-semibold text-slate-200">
-                {meta.convenience_fee || '₹23.60'}
-              </span>
-            </div>
+            {meta.convenience_fee && (
+              <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
+                <span className="text-slate-400">
+                  {isFlight ? 'Taxes & Surcharges' : isBus ? 'Platform Fee' : 'IRCTC Convenience Fee'}
+                </span>
+                <span className="font-mono font-semibold text-slate-200">
+                  {meta.convenience_fee}
+                </span>
+              </div>
+            )}
             <div className="flex items-center justify-between pt-1">
               <span className="font-bold text-white">Total Amount Paid</span>
               <span className="font-mono text-base font-extrabold text-amber-400">
-                {meta.total_fare || '₹1,103.60'}
+                {meta.total_fare || meta.ticket_fare || 'N/A'}
               </span>
             </div>
           </div>
@@ -238,27 +244,27 @@ export function PassengerManifestTable({ ticket }: Props) {
           <div className="flex items-center gap-2 text-sky-400">
             <Hash className="w-4 h-4" />
             <h4 className="text-xs font-mono uppercase tracking-wider font-bold text-white">
-              Booking Verification
+              {isFlight ? 'Flight Booking Details' : 'Booking Verification'}
             </h4>
           </div>
 
           <div className="space-y-2.5 text-xs">
             <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-              <span className="text-slate-400">PNR Reference</span>
+              <span className="text-slate-400">{isFlight ? 'Airline PNR' : 'PNR Reference'}</span>
               <span className="font-mono font-bold text-amber-400">
                 {ticket.pnr_booking_id || 'N/A'}
               </span>
             </div>
             <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-              <span className="text-slate-400">Transaction ID</span>
+              <span className="text-slate-400">{isFlight ? 'Booking ID' : 'Transaction ID'}</span>
               <span className="font-mono font-semibold text-slate-200">
-                {meta.transaction_id || '100006508175407'}
+                {meta.transaction_id || 'N/A'}
               </span>
             </div>
             <div className="flex items-center justify-between pt-1">
               <span className="text-slate-400">Booked On</span>
               <span className="font-mono text-[11px] text-slate-300">
-                {meta.booking_date || '13-Apr-2026 21:21 HRS'}
+                {meta.booking_date || (ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('en-GB') : 'N/A')}
               </span>
             </div>
           </div>
@@ -275,15 +281,19 @@ export function PassengerManifestTable({ ticket }: Props) {
 
           <div className="space-y-2.5 text-xs">
             <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-              <span className="text-slate-400">Train / Carrier</span>
+              <span className="text-slate-400">
+                {isFlight ? 'Airline / Flight' : isBus ? 'Bus Operator' : 'Train / Carrier'}
+              </span>
               <span className="font-bold text-white">
-                {ticket.carrier_name || '11007 / DECCAN EXPRESS'}
+                {ticket.carrier_name || 'N/A'}
               </span>
             </div>
             <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-              <span className="text-slate-400">Travel Distance</span>
+              <span className="text-slate-400">
+                {isFlight ? 'Flight Route' : 'Travel Distance'}
+              </span>
               <span className="font-mono font-semibold text-slate-200">
-                {meta.distance_km || '128 KM'}
+                {meta.distance_km || (isFlight ? 'Direct Flight' : 'N/A')}
               </span>
             </div>
             <div className="flex items-center justify-between pt-1">

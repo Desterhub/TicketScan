@@ -186,7 +186,14 @@ export function TicketCard({
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                  <span>{ticket.carrier_name || 'Travel Carrier'}</span>
+                  <span>
+                    {ticket.carrier_name ||
+                      (ticket.transport_mode === 'flight'
+                        ? 'Flight Service'
+                        : ticket.transport_mode === 'bus'
+                        ? 'Bus Operator'
+                        : 'Train Service')}
+                  </span>
                   {ticket.manually_corrected && (
                     <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-950/80 border border-sky-500/40 text-sky-300">
                       Edited
@@ -211,7 +218,7 @@ export function TicketCard({
                 <MapPin className="w-3 h-3 text-amber-400" /> Origin
               </span>
               <div className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
-                {ticket.boarding_place || 'Departure Place'}
+                {ticket.boarding_place || 'Origin TBD'}
               </div>
               <div className="text-xs font-mono text-slate-400">
                 {formatDate(ticket.departure_datetime)} • {formatTime(ticket.departure_datetime)}
@@ -235,7 +242,7 @@ export function TicketCard({
                 <MapPin className="w-3 h-3 text-sky-400" /> Destination
               </span>
               <div className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
-                {ticket.destination_place || 'Arrival Place'}
+                {ticket.destination_place || 'Destination TBD'}
               </div>
               <div className="text-xs font-mono text-slate-400">
                 {formatDate(ticket.arrival_datetime)} • {formatTime(ticket.arrival_datetime)}
@@ -278,7 +285,7 @@ export function TicketCard({
                   <div>
                     <span className="text-[10px] font-mono uppercase text-slate-500 block">Seat / Coach</span>
                     <div className="font-semibold text-amber-300 truncate mt-0.5 font-mono">
-                      {ticket.seat_class_coach || 'General / Unassigned'}
+                      {ticket.seat_class_coach || (ticket.transport_mode === 'flight' ? 'Economy' : 'Assigned')}
                     </div>
                   </div>
 
