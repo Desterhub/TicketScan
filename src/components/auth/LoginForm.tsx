@@ -249,7 +249,7 @@ export function LoginForm({ onSuccess, onWatchIntro, isInPortal = false }: Login
               data-form-type="other"
               value={passengerName}
               onChange={(e) => setPassengerName(e.target.value)}
-              placeholder="e.g. Alex Morgan"
+              placeholder="e.g. Tirth Shah"
               className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
             />
           </div>
