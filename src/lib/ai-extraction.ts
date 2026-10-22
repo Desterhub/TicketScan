@@ -495,6 +495,206 @@ export function parseTicketDataFromText(text: string, fileName: string = ''): Ex
     if (busFareMatch) total_fare = `₹${busFareMatch[1]}`;
   }
 
+  // ==========================================
+  // UNIVERSAL FORMAT-AGNOSTIC EXTRACTOR
+  // Recovers any missing fields across ANY airline, rail, bus, ferry or travel slip
+  // ==========================================
+
+  // 1. Universal Carrier / Service Name
+  if (!carrier_name) {
+    const globalAirlines = /(Akasa Air|IndiGo|Air India|Vistara|SpiceJet|Emirates|Qatar Airways|Etihad Airways|Flydubai|Singapore Airlines|Lufthansa|British Airways|AirAsia|Alliance Air|Oman Air|Gulf Air|FlyArystan|Air Arabia|Delta Air Lines|Delta|United Airlines|United|American Airlines|Southwest Airlines|Southwest|KLM|Air France|Ryanair|EasyJet|Virgin Atlantic|Turkish Airlines|Cathay Pacific|Qantas|Air Canada|ANA|Japan Airlines|Korean Air|EVA Air|Saudia|Kuwait Airways|EgyptAir|Ethiopian Airlines|Swiss|Austrian Airlines|Finnair|SAS|Iberia|Aeromexico|LATAM|Avianca|TAP Air Portugal|Wizz Air|Flyadeal|Jazeera Airways|SalamAir|Biman Bangladesh|SriLankan Airlines|Malaysia Airlines|Garuda Indonesia|Vietnam Airlines|Thai Airways)/i;
+    const gAirMatch = text.match(globalAirlines);
+    const flightCodeMatch = text.match(/\b([A-Z0-9]{2}[-\s]?\d{3,4})\b/);
+
+    if (gAirMatch && flightCodeMatch) {
+      carrier_name = `${gAirMatch[1]} (${flightCodeMatch[1]})`;
+      if (transport_mode === 'unknown') transport_mode = 'flight';
+    } else if (gAirMatch) {
+      carrier_name = gAirMatch[1];
+      if (transport_mode === 'unknown') transport_mode = 'flight';
+    } else if (flightCodeMatch && /flight|terminal|gate|airport|boarding/i.test(fullText)) {
+      carrier_name = `Flight ${flightCodeMatch[1]}`;
+      if (transport_mode === 'unknown') transport_mode = 'flight';
+    }
+
+    // Rail
+    if (!carrier_name) {
+      const railMatch = text.match(/(Amtrak|Eurostar|SNCF|Deutsche Bahn|\bDB\b|Trenitalia|Renfe|UK National Rail|VIA Rail|Japan Rail|\bJR\b|Brightline|Thalys|Frecciarossa|Italo|ÖBB)/i);
+      const trainNoMatch = text.match(/(?:Train\s*(?:No\.?|Number)?[:\s]*)?(\d{4,5})\s*[\/-]?\s*([A-Za-z0-9\s]{3,30})/i);
+      if (railMatch) {
+        carrier_name = railMatch[1];
+        if (transport_mode === 'unknown') transport_mode = 'train';
+      } else if (trainNoMatch && /rail|train|station|berth|coach|platform/i.test(fullText)) {
+        carrier_name = `${trainNoMatch[1]} / ${trainNoMatch[2].trim()}`;
+        if (transport_mode === 'unknown') transport_mode = 'train';
+      }
+    }
+
+    // Bus
+    if (!carrier_name) {
+      const busMatch = text.match(/(FlixBus|Greyhound|Megabus|National Express|Alsa|Eurolines|RedBus|Zingbus|IntrCity|AbhiBus|VRL|SRS|KSRTC|MSRTC|Neeta|Orange|Chalo|Hans|Gujarat Travels|Stagecoach)/i);
+      const busPattern = text.match(/\b([A-Z][A-Za-z0-9\s]{2,25}?(?:Travels|Lines|Transport|Express|Bus Lines))\b/i);
+      if (busMatch) {
+        carrier_name = busMatch[1];
+        if (transport_mode === 'unknown') transport_mode = 'bus';
+      } else if (busPattern && /bus|coach|seat|boarding/i.test(fullText)) {
+        carrier_name = busPattern[1];
+        if (transport_mode === 'unknown') transport_mode = 'bus';
+      }
+    }
+
+    // Operator Label
+    if (!carrier_name) {
+      const opMatch = text.match(/(?:operator|carrier|airline|service|transport company|travels)[:\s]*([A-Za-z0-9\s-]{3,30})/i);
+      if (opMatch) carrier_name = opMatch[1].trim();
+    }
+  }
+
+  // 2. Universal PNR / Booking ID
+  if (!pnr_booking_id) {
+    const labeledPnr = text.match(/(?:PNR|Booking Ref(?:erence)?|Record Locator|Confirmation (?:Code|Number|#)|Reservation (?:ID|Code|#)|Order (?:ID|Number|#)|Ticket (?:No|Number|#)|E-Ticket No)[:\s]*([A-Z0-9-]{5,18})\b/i);
+    if (labeledPnr) {
+      pnr_booking_id = labeledPnr[1].toUpperCase();
+    } else {
+      const tenDigit = text.match(/\b([2-9]\d{9})\b/);
+      if (tenDigit) {
+        pnr_booking_id = tenDigit[1];
+      } else {
+        const tokenMatches = [...text.matchAll(/\b([A-Z0-9]{6})\b/g)];
+        const stopWords = new Set(['TICKET', 'FLIGHT', 'STATUS', 'CANCEL', 'NUMBER', 'DETAIL', 'NOTICE', 'TRAVEL', 'GUESTS', 'ONLINE', 'SYSTEM', 'REPORT', 'AMOUNT', 'AIRPORT', 'DIRECT', 'SEATME', 'TRAVE']);
+        for (const tm of tokenMatches) {
+          const tok = tm[1].toUpperCase();
+          if (!stopWords.has(tok) && !/^\d+$/.test(tok)) {
+            pnr_booking_id = tok;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // 3. Universal Origin & Destination Route
+  if (!boarding_place || !destination_place) {
+    const fromToMatch = text.match(/From[:\s]+([A-Za-z0-9\s,().-]{3,35}?)\s+To[:\s]+([A-Za-z0-9\s,().-]{3,35})(?=\s*(?:\n|Date|Time|Departure|Arrival|Seat|Fare|$))/i);
+    const origDestMatch = text.match(/Origin[:\s]+([A-Za-z0-9\s,().-]{3,35}?)\s+(?:Destination|Dest)[:\s]+([A-Za-z0-9\s,().-]{3,35})/i);
+    const depArrPlaceMatch = text.match(/Departure[:\s]+([A-Za-z0-9\s,().-]{3,35}?)\s+Arrival[:\s]+([A-Za-z0-9\s,().-]{3,35})/i);
+    const boardDropMatch = text.match(/(?:Boarding(?:\s*Point)?|Pickup)[:\s]+([A-Za-z0-9\s,().-]{3,35}?)\s+(?:Dropping(?:\s*Point)?|Drop)[:\s]+([A-Za-z0-9\s,().-]{3,35})/i);
+    const arrowMatch = text.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*(?:\([A-Z]{3}\))?\s*(?:to|->|-|—)\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*(?:\([A-Z]{3}\))?/);
+
+    if (fromToMatch) {
+      boarding_place = fromToMatch[1].trim();
+      destination_place = fromToMatch[2].trim();
+    } else if (origDestMatch) {
+      boarding_place = origDestMatch[1].trim();
+      destination_place = origDestMatch[2].trim();
+    } else if (depArrPlaceMatch) {
+      boarding_place = depArrPlaceMatch[1].trim();
+      destination_place = depArrPlaceMatch[2].trim();
+    } else if (boardDropMatch) {
+      boarding_place = boardDropMatch[1].trim();
+      destination_place = boardDropMatch[2].trim();
+    } else if (arrowMatch && !/seat|meal|status/i.test(arrowMatch[0])) {
+      boarding_place = arrowMatch[1].trim();
+      destination_place = arrowMatch[2].trim();
+    }
+  }
+
+  // 4. Universal Schedule Dates & Times
+  if (!departure_datetime) {
+    const anyDateMatch = text.match(/(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i) ||
+      text.match(/(\d{1,2}[-\/](?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[-\/]\d{2,4})/i) ||
+      text.match(/(\d{4}[-\/]\d{2}[-\/]\d{2})/) ||
+      text.match(/(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/);
+
+    const timeMatches = [...text.matchAll(/\b(\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM|am|pm|hrs|HRS)?)\b/g)];
+    if (anyDateMatch && timeMatches.length > 0) {
+      try {
+        const d1 = new Date(`${anyDateMatch[1]} ${timeMatches[0][1]} UTC`);
+        if (!isNaN(d1.getTime())) departure_datetime = d1.toISOString();
+        if (timeMatches.length > 1) {
+          const d2 = new Date(`${anyDateMatch[1]} ${timeMatches[1][1]} UTC`);
+          if (!isNaN(d2.getTime())) arrival_datetime = d2.toISOString();
+        }
+      } catch {}
+    }
+  }
+
+  // 5. Universal Seat / Class
+  if (!seat_class_coach) {
+    const seatMatch = text.match(/(?:seat\s*(?:no\.?|number)?|seats)[:\s]*([0-9A-Z,\s-]+)/i);
+    const coachMatch = text.match(/coach[:\s]*([0-9A-Z]+)/i);
+    const classMatch = text.match(/(?:class|cabin)[:\s]*([A-Za-z0-9\s()]+)/i);
+
+    if (seatMatch && coachMatch) {
+      seat_class_coach = `Coach ${coachMatch[1].trim()} / Seat ${seatMatch[1].trim()}`;
+    } else if (seatMatch) {
+      seat_class_coach = `Seat ${seatMatch[1].trim()}`;
+    } else if (classMatch) {
+      seat_class_coach = classMatch[1].trim();
+    }
+  }
+
+  // 6. Universal Fares across Any Currency
+  if (!total_fare) {
+    const fareMatch = text.match(/(?:Total\s*(?:Amount|Fare|Price|Paid|Payable)|Amount\s*Paid|Net\s*(?:Amount|Payable)|Paid\s*Amount|Grand\s*Total|You\s*have\s*paid)[:\s]*(?:₹|Rs\.?|INR|\$|USD|€|EUR|£|GBP|AED|AUD|CAD|SGD|¥)?\s*([0-9,]+(?:\.\d{2})?)/i);
+    if (fareMatch) {
+      let currency = '₹';
+      if (text.includes('$') || /USD/i.test(fareMatch[0])) currency = '$';
+      else if (text.includes('€') || /EUR/i.test(fareMatch[0])) currency = '€';
+      else if (text.includes('£') || /GBP/i.test(fareMatch[0])) currency = '£';
+      else if (/AED/i.test(fareMatch[0])) currency = 'AED ';
+
+      const num = parseFloat(fareMatch[1].replace(/,/g, ''));
+      if (!isNaN(num)) {
+        total_fare = `${currency}${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        ticket_fare = total_fare;
+      }
+    }
+  }
+
+  // 7. Universal Multi-Passenger List
+  if (passengersList.length === 0) {
+    const prefixPax = [...text.matchAll(/(?:MR|MS|MRS|MISS|DR|PROF|MASTER)\.?\s+([A-Za-z\s]{3,35}?)(?:\s+(?:Adult|Child|Infant))?(?:\s+([0-9]{1,2}[A-K]))?/gi)];
+    if (prefixPax.length > 0) {
+      prefixPax.forEach((pm, idx) => {
+        const isFemale = /MS|MRS|MISS/i.test(pm[0]);
+        const name = pm[1].trim().replace(/\s+/g, ' ');
+        const seat = pm[2] || undefined;
+        if (!/SEAT|MEAL|STATUS|TICKET|CHOICE|BOOKING/i.test(name)) {
+          passengersList.push({
+            num: idx + 1,
+            name,
+            age: null,
+            gender: isFemale ? 'Female' : 'Male',
+            booking_status: 'Confirmed',
+            current_status: seat ? `Confirmed (Seat ${seat})` : 'Confirmed',
+            seat,
+          });
+        }
+      });
+    }
+
+    if (passengersList.length === 0) {
+      const numPax = [...text.matchAll(/(?:^|\n)\s*(\d+)[\.\)]\s*([A-Za-z][A-Za-z\s]{2,30}?)(?:\s+(\d{1,2}))?(?:\s+([MF]))?(?=\s*(?:\n|$|\t|Seat))/gi)];
+      numPax.forEach((nm) => {
+        const num = parseInt(nm[1], 10);
+        const name = nm[2].trim().replace(/\s+/g, ' ');
+        const age = nm[3] ? parseInt(nm[3], 10) : null;
+        const gender = nm[4] === 'M' ? 'Male' : nm[4] === 'F' ? 'Female' : null;
+        if (!/Passenger|Booking|Status|Payment|Ticket|Details/i.test(name)) {
+          passengersList.push({
+            num,
+            name,
+            age,
+            gender: gender || 'Adult',
+            booking_status: 'Confirmed',
+            current_status: 'Confirmed',
+          });
+        }
+      });
+    }
+  }
+
   // Primary passenger string
   let passenger_name: string | null = null;
   let passenger_age: number | null = null;

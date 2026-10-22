@@ -358,10 +358,10 @@ export async function generateTicketsExcelWorkbook(
   wsAnalytics.mergeCells('B3:M3');
   const subCell = wsAnalytics.getCell('B3');
   subCell.value = `Exported by: ${generatedBy}  |  Scope: ${filterLabel}  |  Generated on: ${new Date().toUTCString()}  |  Zero-Mock Truthful Data Register`;
-  subCell.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF94A3B8' } };
+  subCell.font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FF94A3B8' } };
   subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
   subCell.alignment = { vertical: 'middle', horizontal: 'center' };
-  wsAnalytics.getRow(3).height = 22;
+  wsAnalytics.getRow(3).height = 24;
 
   // KPI Metric Cards (Row 5 - 7)
   const kpis = [
@@ -378,7 +378,7 @@ export async function generateTicketsExcelWorkbook(
     wsAnalytics.mergeCells(`${kpi.col}5:${endCol}5`);
     const lbl = wsAnalytics.getCell(`${kpi.col}5`);
     lbl.value = kpi.label;
-    lbl.font = { name: 'Segoe UI', size: 8, bold: true, color: { argb: 'FF94A3B8' } };
+    lbl.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF94A3B8' } };
     lbl.alignment = { horizontal: 'center', vertical: 'middle' };
     lbl.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
 
@@ -390,8 +390,8 @@ export async function generateTicketsExcelWorkbook(
     val.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: kpi.fill } };
   });
 
-  wsAnalytics.getRow(5).height = 18;
-  wsAnalytics.getRow(6).height = 28;
+  wsAnalytics.getRow(5).height = 20;
+  wsAnalytics.getRow(6).height = 30;
 
   // Insert Embedded Charts
   try {
@@ -429,17 +429,18 @@ export async function generateTicketsExcelWorkbook(
 
   // Row 23: Data Breakdown Section Header
   wsAnalytics.getCell('B23').value = 'TABLE 1: BOOKING STATUS BREAKDOWN';
-  wsAnalytics.getCell('B23').font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: 'FF0F172A' } };
+  wsAnalytics.getCell('B23').font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FF0F172A' } };
 
   wsAnalytics.getCell('H23').value = 'TABLE 2: TRANSPORT MODALITY SHARE';
-  wsAnalytics.getCell('H23').font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: 'FF0F172A' } };
+  wsAnalytics.getCell('H23').font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FF0F172A' } };
 
   // Status Table Headers (Row 24)
   const statusHeaders = ['Booking Status', 'Ticket Count', 'Share (%)', 'Operational Impact'];
+  wsAnalytics.getRow(24).height = 28;
   statusHeaders.forEach((h, i) => {
     const c = wsAnalytics.getCell(24, 2 + i);
     c.value = h;
-    c.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    c.font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
     c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
     c.alignment = { horizontal: 'center', vertical: 'middle' };
   });
@@ -465,12 +466,13 @@ export async function generateTicketsExcelWorkbook(
     c4.value = row.impact;
 
     [c1, c2, c3, c4].forEach((cell) => {
-      cell.font = { name: 'Segoe UI', size: 9 };
+      cell.font = { name: 'Segoe UI', size: 10 };
       cell.alignment = { vertical: 'middle' };
       cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
     });
     c2.alignment = { horizontal: 'center', vertical: 'middle' };
     c3.alignment = { horizontal: 'center', vertical: 'middle' };
+    wsAnalytics.getRow(rIdx).height = 24;
   });
 
   // Modality Table Headers (Row 24)
@@ -478,15 +480,15 @@ export async function generateTicketsExcelWorkbook(
   modeHeaders.forEach((h, i) => {
     const c = wsAnalytics.getCell(24, 8 + i);
     c.value = h;
-    c.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    c.font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
     c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
     c.alignment = { horizontal: 'center', vertical: 'middle' };
   });
 
   const modeRows = [
-    { name: 'Train (Indian Railways)', count: modeStats.train, carrier: 'IRCTC / Northern / Western' },
-    { name: 'Flight (Aviation)', count: modeStats.flight, carrier: 'Domestic & Intl Airlines' },
-    { name: 'Bus / Road', count: modeStats.bus, carrier: 'Intercity Transport' },
+    { name: 'Train (Rail Networks)', count: modeStats.train, carrier: 'IRCTC / National / Express' },
+    { name: 'Flight (Aviation Airlines)', count: modeStats.flight, carrier: 'Domestic & Global Carriers' },
+    { name: 'Bus (Intercity Roadways)', count: modeStats.bus, carrier: 'Intercity Operators' },
   ];
 
   modeRows.forEach((row, idx) => {
@@ -503,12 +505,13 @@ export async function generateTicketsExcelWorkbook(
     c4.value = row.carrier;
 
     [c1, c2, c3, c4].forEach((cell) => {
-      cell.font = { name: 'Segoe UI', size: 9 };
+      cell.font = { name: 'Segoe UI', size: 10 };
       cell.alignment = { vertical: 'middle' };
       cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
     });
     c2.alignment = { horizontal: 'center', vertical: 'middle' };
     c3.alignment = { horizontal: 'center', vertical: 'middle' };
+    wsAnalytics.getRow(rIdx).height = 24;
   });
 
   // Adjust widths for analytics sheet
@@ -536,10 +539,10 @@ export async function generateTicketsExcelWorkbook(
   wsPassengers.mergeCells('A2:W2');
   const paxSub = wsPassengers.getCell('A2');
   paxSub.value = 'Each row represents an individual verified passenger with designated coach, seat, booking status, route, and financial allocation.';
-  paxSub.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF94A3B8' } };
+  paxSub.font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FF94A3B8' } };
   paxSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
   paxSub.alignment = { vertical: 'middle', horizontal: 'center' };
-  wsPassengers.getRow(2).height = 20;
+  wsPassengers.getRow(2).height = 24;
 
   // Header Columns for Manifest Table (Row 3)
   const manifestHeaders = [
@@ -570,11 +573,11 @@ export async function generateTicketsExcelWorkbook(
 
   const headerRow = wsPassengers.getRow(3);
   headerRow.values = manifestHeaders;
-  headerRow.height = 26;
+  headerRow.height = 30;
 
   manifestHeaders.forEach((_, i) => {
     const cell = headerRow.getCell(i + 1);
-    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
     cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
     cell.border = {
@@ -589,7 +592,7 @@ export async function generateTicketsExcelWorkbook(
   allPassengerRows.forEach((p, idx) => {
     const rowNum = 4 + idx;
     const r = wsPassengers.getRow(rowNum);
-    r.height = 22;
+    r.height = 24;
 
     r.values = [
       idx + 1,
@@ -623,7 +626,7 @@ export async function generateTicketsExcelWorkbook(
 
     for (let c = 1; c <= manifestHeaders.length; c++) {
       const cell = r.getCell(c);
-      cell.font = { name: 'Segoe UI', size: 9 };
+      cell.font = { name: 'Segoe UI', size: 10 };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: zebraFill } };
       cell.border = {
         bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
@@ -639,22 +642,22 @@ export async function generateTicketsExcelWorkbook(
     });
 
     // Bold passenger name
-    r.getCell(3).font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF0F172A' } };
+    r.getCell(3).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
 
     // Status coloring
     const statusCell = r.getCell(7); // Current Status
     const statusText = (p.currentStatus || '').toLowerCase();
     if (statusText.includes('cnf') || statusText.includes('confirmed')) {
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
-      statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF065F46' } };
+      statusCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF065F46' } };
       statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
     } else if (statusText.includes('wl') || statusText.includes('wait')) {
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
-      statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF92400E' } };
+      statusCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF92400E' } };
       statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
     } else if (statusText.includes('rac')) {
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
-      statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF0369A1' } };
+      statusCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0369A1' } };
       statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
     }
 
@@ -662,13 +665,13 @@ export async function generateTicketsExcelWorkbook(
     const riskCell = r.getCell(21);
     if (p.riskCategory === 'VERIFIED') {
       riskCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECFDF5' } };
-      riskCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF059669' } };
+      riskCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF059669' } };
     } else if (p.riskCategory === 'FLAGGED') {
       riskCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
-      riskCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FFDC2626' } };
+      riskCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFDC2626' } };
     } else {
       riskCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFBEB' } };
-      riskCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FFD97706' } };
+      riskCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFD97706' } };
     }
   });
 
@@ -708,10 +711,10 @@ export async function generateTicketsExcelWorkbook(
   wsTickets.mergeCells('A2:R2');
   const tSub = wsTickets.getCell('A2');
   tSub.value = 'Full cryptographic and forensic authenticity breakdown per document including extraction confidence and tamper flags.';
-  tSub.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF94A3B8' } };
+  tSub.font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FF94A3B8' } };
   tSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
   tSub.alignment = { vertical: 'middle', horizontal: 'center' };
-  wsTickets.getRow(2).height = 20;
+  wsTickets.getRow(2).height = 24;
 
   const ticketHeaders = [
     '#',
@@ -736,11 +739,11 @@ export async function generateTicketsExcelWorkbook(
 
   const tHeaderRow = wsTickets.getRow(3);
   tHeaderRow.values = ticketHeaders;
-  tHeaderRow.height = 26;
+  tHeaderRow.height = 30;
 
   ticketHeaders.forEach((_, i) => {
     const cell = tHeaderRow.getCell(i + 1);
-    cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
     cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
     cell.border = {
@@ -754,7 +757,7 @@ export async function generateTicketsExcelWorkbook(
   tickets.forEach((t, idx) => {
     const rowNum = 4 + idx;
     const r = wsTickets.getRow(rowNum);
-    r.height = 22;
+    r.height = 24;
 
     const rScore = Number(t.tamper_risk_score || 0);
     const rCat = rScore < 0.3 ? 'VERIFIED (PASS)' : rScore < 0.65 ? 'REVIEW NEEDED' : 'HIGH RISK (FLAGGED)';
@@ -786,7 +789,7 @@ export async function generateTicketsExcelWorkbook(
 
     for (let c = 1; c <= ticketHeaders.length; c++) {
       const cell = r.getCell(c);
-      cell.font = { name: 'Segoe UI', size: 9 };
+      cell.font = { name: 'Segoe UI', size: 10 };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: zebraFill } };
       cell.border = {
         bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
@@ -804,13 +807,13 @@ export async function generateTicketsExcelWorkbook(
     const rateCell = r.getCell(14);
     if (rScore < 0.3) {
       rateCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECFDF5' } };
-      rateCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF059669' } };
+      rateCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF059669' } };
     } else if (rScore < 0.65) {
       rateCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFBEB' } };
-      rateCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FFD97706' } };
+      rateCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFD97706' } };
     } else {
       rateCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
-      rateCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FFDC2626' } };
+      rateCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFDC2626' } };
     }
   });
 
@@ -857,19 +860,19 @@ export async function generateUsersExcelWorkbook(users: any[], generatedBy: stri
   ws.mergeCells('A2:G2');
   const sub = ws.getCell('A2');
   sub.value = `Audited by: ${generatedBy} | Export Timestamp: ${new Date().toUTCString()}`;
-  sub.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF94A3B8' } };
+  sub.font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FF94A3B8' } };
   sub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
   sub.alignment = { vertical: 'middle', horizontal: 'center' };
-  ws.getRow(2).height = 20;
+  ws.getRow(2).height = 24;
 
   const headers = ['#', 'User ID', 'Email Address', 'Full Name', 'Role Permission', 'Account Status', 'Registered Date'];
   const hRow = ws.getRow(3);
   hRow.values = headers;
-  hRow.height = 26;
+  hRow.height = 30;
 
   headers.forEach((_, i) => {
     const c = hRow.getCell(i + 1);
-    c.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+    c.font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
     c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
     c.alignment = { vertical: 'middle', horizontal: 'center' };
   });
@@ -877,7 +880,7 @@ export async function generateUsersExcelWorkbook(users: any[], generatedBy: stri
   users.forEach((u, idx) => {
     const rowNum = 4 + idx;
     const r = ws.getRow(rowNum);
-    r.height = 22;
+    r.height = 24;
     r.values = [
       idx + 1,
       u.id,
@@ -891,7 +894,7 @@ export async function generateUsersExcelWorkbook(users: any[], generatedBy: stri
     const zebra = idx % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC';
     for (let col = 1; col <= headers.length; col++) {
       const cell = r.getCell(col);
-      cell.font = { name: 'Segoe UI', size: 9 };
+      cell.font = { name: 'Segoe UI', size: 10 };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: zebra } };
       cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
       cell.alignment = { vertical: 'middle' };
@@ -904,10 +907,10 @@ export async function generateUsersExcelWorkbook(users: any[], generatedBy: stri
     const statusCell = r.getCell(6);
     if (u.is_active) {
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
-      statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF065F46' } };
+      statusCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF065F46' } };
     } else {
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
-      statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FFDC2626' } };
+      statusCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFDC2626' } };
     }
   });
 

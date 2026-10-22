@@ -74,6 +74,21 @@ function AdminTicketsContent() {
     window.open('/api/admin/export?type=tickets', '_blank');
   };
 
+  const handleDeleteTicket = async (ticketId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this ticket record? This action cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+      } else {
+        alert(data.error || 'Failed to delete ticket record');
+      }
+    } catch (err) {
+      alert('Network error while deleting ticket record');
+    }
+  };
+
   const filteredTickets = tickets.filter((t) => {
     if (modeFilter !== 'all' && t.transport_mode !== modeFilter) return false;
     if (statusFilter !== 'all' && t.booking_status !== statusFilter) return false;
@@ -196,7 +211,12 @@ function AdminTicketsContent() {
         ) : filteredTickets.length > 0 ? (
           <div className="space-y-4">
             {filteredTickets.map((t) => (
-              <TicketCard key={t.id} ticket={t} showAdminActions={true} />
+              <TicketCard
+                key={t.id}
+                ticket={t}
+                showAdminActions={true}
+                onDelete={handleDeleteTicket}
+              />
             ))}
           </div>
         ) : (

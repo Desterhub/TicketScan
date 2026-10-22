@@ -17,6 +17,7 @@ import {
   ArrowRight,
   BarChart3,
   TrendingUp,
+  Receipt,
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -121,58 +122,77 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* 5 Primary Stat Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 w-full">
+        {/* 6 Primary Stat Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 w-full">
+          {/* Card 1: Total Fare of All Passengers */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-900/90 via-slate-900/70 to-emerald-950/30 border border-emerald-500/40 space-y-1 min-w-0 shadow-lg shadow-emerald-950/20 col-span-2 sm:col-span-1">
+            <div className="flex items-center justify-between text-emerald-400">
+              <span className="text-[11px] sm:text-xs font-mono uppercase truncate font-bold">Total Fare</span>
+              <Receipt className="w-4 h-4 text-emerald-400 shrink-0" />
+            </div>
+            <div className="text-xl sm:text-2xl font-black font-mono text-emerald-300 truncate tracking-tight">
+              {stats?.totalFare || '₹0.00'}
+            </div>
+            <span className="text-[10px] sm:text-[11px] text-slate-400 font-mono truncate block">
+              Cumulative ({stats?.totalPassengers || 0} pax)
+            </span>
+          </div>
+
+          {/* Card 2: Total Users */}
           <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[11px] sm:text-xs font-mono uppercase truncate">Total Users</span>
               <Users className="w-4 h-4 text-sky-400 shrink-0" />
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-white">
+            <div className="text-xl sm:text-2xl font-black font-mono text-white">
               {stats?.totalUsers || 0}
             </div>
             <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Registered accounts</span>
           </div>
 
+          {/* Card 3: Total Tickets */}
           <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[11px] sm:text-xs font-mono uppercase truncate">Total Tickets</span>
               <Ticket className="w-4 h-4 text-amber-400 shrink-0" />
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-amber-400">
+            <div className="text-xl sm:text-2xl font-black font-mono text-amber-400">
               {stats?.totalTickets || 0}
             </div>
-            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Processed via Vision AI</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Processed tickets</span>
           </div>
 
+          {/* Card 4: This Week */}
           <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[11px] sm:text-xs font-mono uppercase truncate">This Week</span>
               <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-400">
+            <div className="text-xl sm:text-2xl font-black font-mono text-emerald-400">
               {stats?.ticketsThisWeek || 0}
             </div>
-            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Ingested in last 7 days</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Last 7 days</span>
           </div>
 
+          {/* Card 5: Avg Confidence */}
           <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-slate-400">
               <span className="text-[11px] sm:text-xs font-mono uppercase truncate">Avg Confidence</span>
               <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-sky-400">
+            <div className="text-xl sm:text-2xl font-black font-mono text-sky-400">
               {stats?.averageConfidence || 94}%
             </div>
-            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Model extraction score</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 font-mono truncate block">Extraction score</span>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-red-500/30 col-span-2 lg:col-span-1 space-y-1 min-w-0">
+          {/* Card 6: Flagged Risk */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-red-500/30 space-y-1 min-w-0">
             <div className="flex items-center justify-between text-red-400">
               <span className="text-[11px] sm:text-xs font-mono uppercase truncate">Flagged Risk</span>
               <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
             </div>
-            <div className="text-2xl sm:text-3xl font-black font-mono text-red-400">
+            <div className="text-xl sm:text-2xl font-black font-mono text-red-400">
               {stats?.flaggedCount || 0}
             </div>
             <span className="text-[10px] sm:text-[11px] text-red-300 font-mono truncate block">Tamper risk &gt; 0.30</span>

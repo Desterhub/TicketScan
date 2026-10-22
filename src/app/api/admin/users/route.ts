@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/session';
 import { getServiceRoleClient } from '@/lib/db';
+import { logAuditEvent } from '@/lib/auth';
+import { deleteTicketFile } from '@/lib/storage';
 
 export async function GET() {
   try {
@@ -47,3 +49,64 @@ export async function GET() {
     return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await getSession();
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId');
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
+    if (userId === session.userId) {
+      return NextResponse.json({ error: 'Cannot delete your own active administrator account' }, { status: 400 });
+    }
+
+    const supabase = getServiceRoleClient();
+
+    // 1. Delete user tickets and their files
+    const { data: userTickets } = await supabase
+      .from('tickets')
+      .select('id, file_path')
+      .eq('user_id', userId);
+
+    if (userTickets && userTickets.length > 0) {
+      for (const t of userTickets) {
+        if (t.file_path) {
+          try {
+            await deleteTicketFile(t.file_path);
+          } catch {}
+        }
+      }
+      await supabase.from('tickets').delete().eq('user_id', userId);
+    }
+
+    // 2. Delete user record
+    await supabase.from('users').delete().eq('id', userId);
+
+    // Also update localDb if in local mode
+    try {
+      const { localDb } = await import('@/lib/local-store');
+      const updatedUsers = localDb.getUsers().filter((u) => u.id !== userId);
+      localDb.saveUsers(updatedUsers);
+      const updatedTickets = localDb.getTickets().filter((t) => t.user_id !== userId);
+      localDb.saveTickets(updatedTickets);
+    } catch {}
+
+    await logAuditEvent({
+      userId: session.userId,
+      action: 'delete_ticket',
+      metadata: { deletedUserId: userId },
+    });
+
+    return NextResponse.json({ success: true, message: 'User record and associated tickets deleted successfully' });
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 });
+  }
+}
+

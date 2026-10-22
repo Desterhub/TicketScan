@@ -28,12 +28,12 @@ export async function GET() {
       .select('id', { count: 'exact', head: true })
       .gte('created_at', oneWeekAgo);
 
-    // 4. All tickets for averages & flagged calculation
+    // 4. All tickets for averages, flagged & total fare calculation
     let allTickets: any[] = [];
     try {
       const { data } = await supabase
         .from('tickets')
-        .select('extraction_confidence, tamper_risk_score, created_at, transport_mode');
+        .select('extraction_confidence, tamper_risk_score, created_at, transport_mode, raw_extraction_json, passenger_name');
       if (data && data.length > 0) allTickets = data;
     } catch {}
 
@@ -50,6 +50,25 @@ export async function GET() {
     let totalConfidence = 0;
     let confidenceCount = 0;
     let flaggedCount = 0;
+    let totalFareNumeric = 0;
+    let primaryCurrency = '₹';
+    let totalPassengers = 0;
+
+    const parseFare = (val: unknown): { amount: number; currency: string } => {
+      if (typeof val === 'number') return { amount: val, currency: '₹' };
+      if (!val || typeof val !== 'string') return { amount: 0, currency: '₹' };
+
+      let currency = '₹';
+      if (val.includes('$') || /USD/i.test(val)) currency = '$';
+      else if (val.includes('€') || /EUR/i.test(val)) currency = '€';
+      else if (val.includes('£') || /GBP/i.test(val)) currency = '£';
+      else if (/AED/i.test(val)) currency = 'AED ';
+
+      const clean = val.replace(/,/g, '');
+      const match = clean.match(/(\d+(?:\.\d{1,2})?)/);
+      const amount = match ? parseFloat(match[1]) : 0;
+      return { amount: isNaN(amount) ? 0 : amount, currency };
+    };
 
     // Daily breakdown for last 14-30 days
     const dailyMap: Record<string, number> = {};
@@ -72,10 +91,33 @@ export async function GET() {
         if (dateKey && dailyMap[dateKey] !== undefined) {
           dailyMap[dateKey]++;
         }
+
+        // Fares calculation across all manifested tickets
+        const rawMeta = t.raw_extraction_json || {};
+        const fareStr = rawMeta.total_fare || rawMeta.ticket_fare || t.total_fare;
+        const parsed = parseFare(fareStr);
+        if (parsed.amount > 0) {
+          totalFareNumeric += parsed.amount;
+          if (parsed.currency !== '₹') primaryCurrency = parsed.currency;
+        }
+
+        // Total passengers count
+        if (Array.isArray(rawMeta.passengers) && rawMeta.passengers.length > 0) {
+          totalPassengers += rawMeta.passengers.length;
+        } else if (t.passenger_name) {
+          totalPassengers += t.passenger_name.split(',').length;
+        } else {
+          totalPassengers += 1;
+        }
       });
     }
 
     const avgConfidence = confidenceCount > 0 ? totalConfidence / confidenceCount : 0.94;
+
+    const totalFareFormatted = `${primaryCurrency}${totalFareNumeric.toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
 
     const chartData = Object.entries(dailyMap).map(([date, count]) => ({
       date: date.slice(5), // MM-DD
@@ -87,6 +129,9 @@ export async function GET() {
       stats: {
         totalUsers: userCount || 0,
         totalTickets: ticketCount || 0,
+        totalFare: totalFareFormatted,
+        totalFareRaw: totalFareNumeric,
+        totalPassengers: totalPassengers || ticketCount || 0,
         ticketsThisWeek: ticketsThisWeek || 0,
         averageConfidence: Math.round(avgConfidence * 100),
         flaggedCount,

@@ -15,6 +15,7 @@ import {
   Loader2,
   ArrowLeft,
   ChevronRight,
+  Trash2,
 } from 'lucide-react';
 
 export default function AdminUsersPage() {
@@ -58,6 +59,27 @@ export default function AdminUsersPage() {
 
   const handleExportUsers = () => {
     window.open('/api/admin/export?type=users', '_blank');
+  };
+
+  const handleDeleteUser = async (userId: string, email: string) => {
+    if (userId === currentUser?.id) {
+      alert('You cannot delete your own active administrator account.');
+      return;
+    }
+    if (!confirm(`Are you sure you want to permanently delete user "${email}" and all their tickets? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/admin/users?userId=${userId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setUsers((prev) => prev.filter((u) => u.id !== userId));
+      } else {
+        alert(data.error || 'Failed to delete user');
+      }
+    } catch {
+      alert('Network error while deleting user');
+    }
   };
 
   const filteredUsers = users.filter((u) => {
@@ -185,13 +207,25 @@ export default function AdminUsersPage() {
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
-                        <Link
-                          href={`/admin/tickets?userId=${u.id}`}
-                          className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 transition"
-                        >
-                          <span>View Tickets</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
+                        <div className="flex items-center justify-end gap-2.5">
+                          <Link
+                            href={`/admin/tickets?userId=${u.id}`}
+                            className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 transition font-mono text-xs"
+                          >
+                            <span>View Tickets</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </Link>
+                          {u.id !== currentUser?.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(u.id, u.email)}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500 hover:text-white text-slate-400 transition cursor-pointer"
+                              title="Delete user account and all tickets"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -239,13 +273,25 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
 
-                  <Link
-                    href={`/admin/tickets?userId=${u.id}`}
-                    className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-mono font-semibold flex items-center justify-center gap-1.5 transition"
-                  >
-                    <span>Inspect User's Tickets</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/admin/tickets?userId=${u.id}`}
+                      className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-mono font-semibold flex items-center justify-center gap-1.5 transition"
+                    >
+                      <span>Inspect User's Tickets</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
+                    {u.id !== currentUser?.id && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUser(u.id, u.email)}
+                        className="p-2 rounded-xl bg-red-950/60 border border-red-500/30 text-red-400 hover:bg-red-900 transition cursor-pointer"
+                        title="Delete user account"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
