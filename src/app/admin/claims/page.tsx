@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -22,10 +23,15 @@ import {
   ArrowLeft,
   RefreshCw,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import { TixsuranceClaim, TixsurancePolicy } from '@/types/tixsurance';
 
 export default function AdminClaimsPage() {
+  const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
+
   const [claims, setClaims] = useState<TixsuranceClaim[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,10 +40,31 @@ export default function AdminClaimsPage() {
   const [inspectionModalOpen, setInspectionModalOpen] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data?.authenticated || data?.user?.role !== 'admin') {
+          router.replace('/dashboard');
+        } else {
+          setIsAdmin(true);
+          fetchClaims();
+        }
+      })
+      .catch(() => {
+        router.replace('/dashboard');
+      })
+      .finally(() => setAuthChecking(false));
+  }, []);
+
   const fetchClaims = async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/tixsurance');
+      if (res.status === 403) {
+        router.replace('/dashboard');
+        return;
+      }
       const data = await res.json();
       if (data.claims) {
         setClaims(data.claims);
@@ -48,10 +75,6 @@ export default function AdminClaimsPage() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchClaims();
-  }, []);
 
   const handleAction = async (claimId: string, action: 'VERIFY_BAND' | 'APPROVE' | 'REJECT', reason?: string) => {
     try {
@@ -87,6 +110,19 @@ export default function AdminClaimsPage() {
     const matchesType = filterType === 'ALL' || c.policyType === filterType;
     return matchesSearch && matchesType;
   });
+
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white gap-3 font-mono">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+        <span className="text-xs text-slate-400">Verifying Administrator Privileges...</span>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 pb-20">

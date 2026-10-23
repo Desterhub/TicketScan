@@ -8,8 +8,8 @@ import {
 export const TIXSURANCE_HUB = {
   name: 'Tixsurance Verification Hub',
   address: 'Empressa 14, Western Express Highway, Sahar Rd, Andheri East, Mumbai - 400069, Maharashtra',
-  phone: '+91 90821 77312',
-  hours: '24/7 Intake for Event Wristbands',
+  phone: '+91 90042 64161',
+  hours: '24/7 Intake for Event Wristbands & Inquiries',
 };
 
 export const DEFAULT_EVENT_VENUE = {
@@ -120,118 +120,9 @@ export function calculatePremiums(options: {
   };
 }
 
-// In-Memory persistent store for runtime environment
-let inMemoryPolicies: TixsurancePolicy[] = [
-  {
-    id: 'POL-TIX-001',
-    bookingId: 'FAREDEMO2139XG',
-    ticketId: 't-demo-001',
-    userId: 'admin-user-id',
-    ticketFare: 3600,
-    eventVenueCity: 'Navi Mumbai',
-    eventVenueAddress: 'DY Patil Sports Stadium, Sector 7, Nerul, Navi Mumbai',
-    distanceKm: 28,
-    policyType: 'LOCAL',
-    premiumRate: 0.05,
-    ticketPremium: 180,
-    totalPremiumPaid: 180,
-    attendee: {
-      fullName: 'Tirth Dixit Shah',
-      email: 'tirth.shah@example.com',
-      phone: '+91 98200 12345',
-      permanentAddress: {
-        addressLine1: 'Flat 402, Sea Green Apartments, JVPD Scheme',
-        addressLine2: 'Gulmohar Cross Road 9, Juhu',
-        country: 'India',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        postalCode: '400049',
-      },
-      billingAddressSame: true,
-      governmentIdPhotoUrl: '/demo/aadhar_card.jpg',
-    },
-    status: 'ACTIVE',
-    createdAt: new Date(Date.now() - 36 * 3600 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 36 * 3600 * 1000).toISOString(),
-  },
-  {
-    id: 'POL-TIX-002',
-    bookingId: 'LYEMA-7729',
-    ticketId: 't-demo-002',
-    userId: 'admin-user-id',
-    ticketFare: 11070,
-    eventVenueCity: 'Navi Mumbai',
-    eventVenueAddress: 'DY Patil Sports Stadium, Sector 7, Nerul, Navi Mumbai',
-    distanceKm: 1420,
-    policyType: 'OUTSTATION',
-    premiumRate: 0.05,
-    ticketPremium: 554,
-    totalPremiumPaid: 1354,
-    attendee: {
-      fullName: 'Dhwani Piyush Shah',
-      email: 'dhwani.shah@example.com',
-      phone: '+91 98111 88442',
-      permanentAddress: {
-        addressLine1: 'B-14, Defence Colony',
-        addressLine2: 'Ring Road',
-        country: 'India',
-        city: 'New Delhi',
-        state: 'Delhi',
-        postalCode: '110024',
-      },
-      billingAddressSame: true,
-      governmentIdPhotoUrl: '/demo/dl_delhi.jpg',
-    },
-    stayShield: {
-      optOut: false,
-      guestFullName: 'Dhwani Piyush Shah',
-      guestEmail: 'dhwani.shah@example.com',
-      guestPhone: '+91 98111 88442',
-      hotelBookingDocName: 'Taj_Santacruz_Booking_Confirmation.pdf',
-      amountBooked: 8500,
-      premiumRate: 0.05,
-      premiumToPay: 425,
-    },
-    travelShield: {
-      optOut: false,
-      travellerFullName: 'Dhwani Piyush Shah',
-      travellerEmail: 'dhwani.shah@example.com',
-      travellerPhone: '+91 98111 88442',
-      travelBookingDocName: 'Akasa_Air_DEL_BOM_Ticket.pdf',
-      amountBooked: 7500,
-      premiumRate: 0.05,
-      premiumToPay: 375,
-    },
-    status: 'ACTIVE',
-    createdAt: new Date(Date.now() - 18 * 3600 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 18 * 3600 * 1000).toISOString(),
-  },
-];
-
-let inMemoryClaims: TixsuranceClaim[] = [
-  {
-    id: 'CLM-TIX-901',
-    policyId: 'POL-TIX-001',
-    bookingId: 'FAREDEMO2139XG',
-    userId: 'admin-user-id',
-    policyType: 'LOCAL',
-    claimReason: 'Acute viral fever and clinical hospitalization recommendation prior to concert',
-    proofOfEmergencyUrl: '/demo/hospital_admit_slip.pdf',
-    proofOfEmergencyName: 'Lilavati_Hospital_Certificate.pdf',
-    packagingVideoUrl: '/demo/wristband_packaging_video.mp4',
-    packagingVideoName: 'Tirth_Shah_Wristband_Packaging_Video.mp4',
-    hubAddress: TIXSURANCE_HUB.address,
-    hubContactPhone: TIXSURANCE_HUB.phone,
-    hubDeliveryDeadline: new Date(Date.now() + 8 * 3600 * 1000).toISOString(), // 8 hours remaining out of 12
-    wristbandStatus: 'IN_TRANSIT',
-    bandSerialVerified: false,
-    claimStatus: 'HELD_PENDING_BAND',
-    payoutAmount: 3600,
-    payoutDueDate: new Date(Date.now() + 18 * 24 * 3600 * 1000).toISOString().split('T')[0],
-    createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-  },
-];
+// In-Memory store for runtime environment - clean zero-mock register
+let inMemoryPolicies: TixsurancePolicy[] = [];
+let inMemoryClaims: TixsuranceClaim[] = [];
 
 export function getPolicies(): TixsurancePolicy[] {
   return [...inMemoryPolicies];

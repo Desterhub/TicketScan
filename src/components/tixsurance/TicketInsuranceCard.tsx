@@ -22,8 +22,8 @@ interface TicketInsuranceCardProps {
 }
 
 export function TicketInsuranceCard({
-  bookingId = 'FAREDEMO2139XG',
-  ticketFare = 3600,
+  bookingId = '',
+  ticketFare = 0,
   origin,
   destination,
 }: TicketInsuranceCardProps) {
@@ -112,13 +112,13 @@ export function TicketInsuranceCard({
 
             <div className="flex items-center gap-2">
               <Link
-                href={`/tixsurance`}
+                href={bookingId ? `/tixsurance?bookingId=${encodeURIComponent(bookingId)}` : '/tixsurance'}
                 className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition-colors"
               >
                 View Dossier
               </Link>
               <Link
-                href={`/tixsurance`}
+                href={bookingId ? `/tixsurance?bookingId=${encodeURIComponent(bookingId)}` : '/tixsurance'}
                 className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-colors shadow-md shadow-amber-600/20"
               >
                 File Claim
@@ -144,7 +144,7 @@ export function TicketInsuranceCard({
             </div>
 
             <Link
-              href={`/tixsurance`}
+              href={bookingId ? `/tixsurance?bookingId=${encodeURIComponent(bookingId)}&fare=${ticketFare}` : '/tixsurance'}
               className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-lg text-xs tracking-wider uppercase shadow-lg shadow-blue-600/20 flex items-center gap-1.5 transition-all"
             >
               Protect Now

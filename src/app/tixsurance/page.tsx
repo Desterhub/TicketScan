@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -16,73 +16,85 @@ import {
   Hotel,
   Plane,
   Camera,
-  Check,
   Building2,
   Calendar,
-  ExternalLink,
+  X,
 } from 'lucide-react';
 import { evaluateGeofenceRadius, calculatePremiums, TIXSURANCE_HUB, DEFAULT_EVENT_VENUE } from '@/lib/tixsurance';
 
-export default function TixsurancePortalPage() {
-  // Navigation tabs matching the exact 5 Canva design screens
+function TixsuranceContent() {
+  const searchParams = useSearchParams();
+
+  // Screen tabs matching Canva design screens
   const [activeScreen, setActiveScreen] = useState<'ticket' | 'stay' | 'travel' | 'claim_local' | 'claim_outstation'>('ticket');
 
-  // Screen 1: Ticket Onboarding State
-  const [bookingId, setBookingId] = useState('FAREDEMO2139XG');
-  const [ticketFare, setTicketFare] = useState(3600);
-  const [fullName, setFullName] = useState('Tirth Dixit Shah');
-  const [email, setEmail] = useState('tirth.shah@example.com');
-  const [phone, setPhone] = useState('+91 98200 12345');
-  const [addressLine1, setAddressLine1] = useState('Flat 402, Sea Green Apartments, JVPD Scheme');
-  const [addressLine2, setAddressLine2] = useState('Gulmohar Cross Road 9, Juhu');
+  // Screen 1: Ticket Onboarding State (Blank clean slate - no fake autofill)
+  const [bookingId, setBookingId] = useState(searchParams.get('bookingId') || '');
+  const [ticketFare, setTicketFare] = useState<number>(Number(searchParams.get('fare')) || 0);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
   const [country, setCountry] = useState('India');
-  const [city, setCity] = useState('Mumbai');
-  const [state, setState] = useState('Maharashtra');
-  const [postalCode, setPostalCode] = useState('400049');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [postalCode, setPostalCode] = useState('');
   const [billingSame, setBillingSame] = useState(true);
-  const [govIdUploaded, setGovIdUploaded] = useState(true);
-  const [ticketTermsAccepted, setTicketTermsAccepted] = useState(true);
+  const [govIdFile, setGovIdFile] = useState<File | null>(null);
+  const [ticketTermsAccepted, setTicketTermsAccepted] = useState(false);
 
-  // Screen 2: Stay State
+  // Screen 2: Stay State (Clean slate)
   const [optOutStay, setOptOutStay] = useState(false);
-  const [stayGuestName, setStayGuestName] = useState('Tirth Dixit Shah');
-  const [stayGuestEmail, setStayGuestEmail] = useState('tirth.shah@example.com');
-  const [stayGuestPhone, setStayGuestPhone] = useState('+91 98200 12345');
-  const [stayDocUploaded, setStayDocUploaded] = useState(true);
-  const [stayAmount, setStayAmount] = useState(8500);
-  const [stayTermsAccepted, setStayTermsAccepted] = useState(true);
+  const [stayGuestName, setStayGuestName] = useState('');
+  const [stayGuestEmail, setStayGuestEmail] = useState('');
+  const [stayGuestPhone, setStayGuestPhone] = useState('');
+  const [stayDocFile, setStayDocFile] = useState<File | null>(null);
+  const [stayAmount, setStayAmount] = useState<number>(0);
+  const [stayTermsAccepted, setStayTermsAccepted] = useState(false);
 
-  // Screen 3: Travel State
+  // Screen 3: Travel State (Clean slate)
   const [optOutTravel, setOptOutTravel] = useState(false);
-  const [travelName, setTravelName] = useState('Tirth Dixit Shah');
-  const [travelEmail, setTravelEmail] = useState('tirth.shah@example.com');
-  const [travelPhone, setTravelPhone] = useState('+91 98200 12345');
-  const [travelDocUploaded, setTravelDocUploaded] = useState(true);
-  const [travelAmount, setTravelAmount] = useState(7500);
-  const [travelTermsAccepted, setTravelTermsAccepted] = useState(true);
+  const [travelName, setTravelName] = useState('');
+  const [travelEmail, setTravelEmail] = useState('');
+  const [travelPhone, setTravelPhone] = useState('');
+  const [travelDocFile, setTravelDocFile] = useState<File | null>(null);
+  const [travelAmount, setTravelAmount] = useState<number>(0);
+  const [travelTermsAccepted, setTravelTermsAccepted] = useState(false);
 
-  // Screen 4: Claim Local State
-  const [localClaimReason, setLocalClaimReason] = useState('Acute viral medical emergency with hospitalization recommendation');
-  const [localProofUploaded, setLocalProofUploaded] = useState(true);
-  const [localVideoUploaded, setLocalVideoUploaded] = useState(true);
-  const [localDeclarationAccepted, setLocalDeclarationAccepted] = useState(true);
+  // Screen 4: Claim Local State (Clean slate)
+  const [localClaimReason, setLocalClaimReason] = useState('');
+  const [localProofFile, setLocalProofFile] = useState<File | null>(null);
+  const [localVideoFile, setLocalVideoFile] = useState<File | null>(null);
+  const [localDeclarationAccepted, setLocalDeclarationAccepted] = useState(false);
 
-  // Screen 5: Claim Outstation State
-  const [outClaimReason, setOutClaimReason] = useState('Severe flight cancellation and interstate emergency');
-  const [outProofUploaded, setOutProofUploaded] = useState(true);
-  const [outStayReceiptUploaded, setOutStayReceiptUploaded] = useState(true);
-  const [outTravelReceiptUploaded, setOutTravelReceiptUploaded] = useState(true);
-  const [outDeclarationAccepted, setOutDeclarationAccepted] = useState(true);
+  // Screen 5: Claim Outstation State (Clean slate)
+  const [outClaimReason, setOutClaimReason] = useState('');
+  const [outProofFile, setOutProofFile] = useState<File | null>(null);
+  const [outStayReceiptFile, setOutStayReceiptFile] = useState<File | null>(null);
+  const [outTravelReceiptFile, setOutTravelReceiptFile] = useState<File | null>(null);
+  const [outDeclarationAccepted, setOutDeclarationAccepted] = useState(false);
+
+  // Hidden file input refs
+  const govIdRef = useRef<HTMLInputElement>(null);
+  const stayDocRef = useRef<HTMLInputElement>(null);
+  const travelDocRef = useRef<HTMLInputElement>(null);
+  const localProofRef = useRef<HTMLInputElement>(null);
+  const localVideoRef = useRef<HTMLInputElement>(null);
+  const outProofRef = useRef<HTMLInputElement>(null);
+  const outStayReceiptRef = useRef<HTMLInputElement>(null);
+  const outTravelReceiptRef = useRef<HTMLInputElement>(null);
 
   // Submission / success notification states
   const [notification, setNotification] = useState<{ title: string; message: string; type: 'success' | 'info' } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Dynamic Geofence computation (100km radius rule)
   const geofence = evaluateGeofenceRadius({ city, state, postalCode });
   const premiums = calculatePremiums({
-    ticketFare,
-    stayAmount: optOutStay ? 0 : stayAmount,
-    travelAmount: optOutTravel ? 0 : travelAmount,
+    ticketFare: ticketFare || 0,
+    stayAmount: optOutStay ? 0 : stayAmount || 0,
+    travelAmount: optOutTravel ? 0 : travelAmount || 0,
   });
 
   const showToast = (title: string, message: string, type: 'success' | 'info' = 'success') => {
@@ -90,50 +102,194 @@ export default function TixsurancePortalPage() {
     setTimeout(() => setNotification(null), 6000);
   };
 
-  const handleTicketSubmit = () => {
+  const handleTicketSubmit = async () => {
+    if (!bookingId.trim()) {
+      alert('Please enter your Booking ID / PNR.');
+      return;
+    }
+    if (!fullName.trim() || !email.trim() || !phone.trim() || !city.trim()) {
+      alert('Please fill out all mandatory attendee information fields (*).');
+      return;
+    }
+    if (!govIdFile) {
+      alert('Please upload your Government ID photo (Aadhar/Passport/DL).');
+      return;
+    }
     if (!ticketTermsAccepted) {
       alert('Please accept the Tixsurance Terms & Declarations to proceed.');
       return;
     }
-    showToast(
-      'Ticket Policy Activated!',
-      `Tixsurance policy issued under ${geofence.policyType} classification (${geofence.distanceKm} km from venue).`
-    );
-    if (geofence.policyType === 'OUTSTATION') {
-      setActiveScreen('stay');
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/tixsurance/policy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: bookingId.trim().toUpperCase(),
+          ticketFare: Number(ticketFare) || 0,
+          attendee: {
+            fullName: fullName.trim(),
+            email: email.trim(),
+            phone: phone.trim(),
+            permanentAddress: {
+              addressLine1,
+              addressLine2,
+              country,
+              city,
+              state,
+              postalCode,
+            },
+            billingAddressSame: billingSame,
+            governmentIdPhotoUrl: govIdFile ? URL.createObjectURL(govIdFile) : '',
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to activate policy');
+
+      showToast(
+        'Policy Application Submitted!',
+        `Your ticket is registered under ${geofence.policyType} classification (~${geofence.distanceKm} km from venue).`
+      );
+
+      if (geofence.policyType === 'OUTSTATION') {
+        setActiveScreen('stay');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Submission failed');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleStaySubmit = () => {
-    showToast('Stay Shield Saved', optOutStay ? 'Stay insurance opted out.' : 'Accommodation protection active.');
+    if (!optOutStay && !stayDocFile) {
+      alert('Please upload your hotel / accommodation booking confirmation PDF or select the opt-out option.');
+      return;
+    }
+    if (!optOutStay && !stayTermsAccepted) {
+      alert('Please accept the Accommodation Protection terms & conditions.');
+      return;
+    }
+    showToast('Stay Shield Saved', optOutStay ? 'Stay insurance opted out.' : 'Accommodation protection registered.');
     setActiveScreen('travel');
   };
 
   const handleTravelSubmit = () => {
+    if (!optOutTravel && !travelDocFile) {
+      alert('Please upload your transit ticket (Flight/Train/Bus) PDF or select the opt-out option.');
+      return;
+    }
+    if (!optOutTravel && !travelTermsAccepted) {
+      alert('Please accept the Travel Shield terms & conditions.');
+      return;
+    }
     showToast('Travel Shield Saved', optOutTravel ? 'Travel insurance opted out.' : 'Travel corridor protection active.');
-    showToast('Policy Setup Complete', 'Full Tixsurance coverage is now fully active for this booking!');
+    showToast('Enrollment Complete', 'Your Tixsurance coverage is now officially recorded on file!');
   };
 
-  const handleLocalClaimSubmit = () => {
+  const handleLocalClaimSubmit = async () => {
+    if (!bookingId.trim()) {
+      alert('Please enter your Booking ID.');
+      return;
+    }
+    if (!localClaimReason.trim()) {
+      alert('Please specify the reason for cancellation.');
+      return;
+    }
+    if (!localProofFile) {
+      alert('Please upload your medical / emergency certificate.');
+      return;
+    }
+    if (!localVideoFile) {
+      alert('Please upload your continuous, unedited packaging video showing the uncut wristband and sealed envelope.');
+      return;
+    }
     if (!localDeclarationAccepted) {
-      alert('Please check the legal declaration to submit your claim.');
+      alert('Please accept the legal anti-fraud declaration to submit your claim.');
       return;
     }
-    showToast(
-      'Claim Submitted — Payout on HOLD',
-      '12-Hour countdown has started! Ship your uncut wristband to Empressa 14 Hub within 12 hours.'
-    );
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/tixsurance/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: bookingId.trim().toUpperCase(),
+          claimReason: localClaimReason.trim(),
+          proofOfEmergencyUrl: URL.createObjectURL(localProofFile),
+          proofOfEmergencyName: localProofFile.name,
+          packagingVideoUrl: URL.createObjectURL(localVideoFile),
+          packagingVideoName: localVideoFile.name,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit claim');
+
+      showToast(
+        'Claim Submitted — Payout on HOLD',
+        'Your 12-Hour delivery timer is active! Dispatch your uncut wristband to Empressa 14 Hub within 12 hours.'
+      );
+    } catch (err: any) {
+      alert(err.message || 'Claim submission failed');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleOutstationClaimSubmit = () => {
-    if (!outDeclarationAccepted) {
-      alert('Please check the legal declaration to submit your claim.');
+  const handleOutstationClaimSubmit = async () => {
+    if (!bookingId.trim()) {
+      alert('Please enter your Booking ID.');
       return;
     }
-    showToast(
-      'Outstation Claim Filed',
-      'Our forensic team is auditing your stay & travel cancellation receipts. Payout scheduled post-audit.'
-    );
+    if (!outClaimReason.trim()) {
+      alert('Please specify the reason for cancellation.');
+      return;
+    }
+    if (!outProofFile) {
+      alert('Please upload your medical / emergency certificate.');
+      return;
+    }
+    if (!outStayReceiptFile || !outTravelReceiptFile) {
+      alert('Please upload both stay and travel cancellation receipts.');
+      return;
+    }
+    if (!outDeclarationAccepted) {
+      alert('Please accept the legal anti-fraud declaration.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/tixsurance/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: bookingId.trim().toUpperCase(),
+          claimReason: outClaimReason.trim(),
+          proofOfEmergencyUrl: URL.createObjectURL(outProofFile),
+          proofOfEmergencyName: outProofFile.name,
+          stayCancellationReceiptUrl: URL.createObjectURL(outStayReceiptFile),
+          stayCancellationReceiptName: outStayReceiptFile.name,
+          travelCancellationReceiptUrl: URL.createObjectURL(outTravelReceiptFile),
+          travelCancellationReceiptName: outTravelReceiptFile.name,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to submit claim');
+
+      showToast(
+        'Outstation Claim Submitted',
+        'Our forensic team will audit your cancellation receipts. Payout scheduled post-verification.'
+      );
+    } catch (err: any) {
+      alert(err.message || 'Claim submission failed');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -156,7 +312,7 @@ export default function TixsurancePortalPage() {
             </div>
           </div>
 
-          {/* Quick Screen Switcher Tabs matching Canva screens */}
+          {/* Screen Switcher Tabs matching Canva screens */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
             <button
               onClick={() => setActiveScreen('ticket')}
@@ -210,14 +366,11 @@ export default function TixsurancePortalPage() {
             </button>
           </div>
 
-          <div className="hidden lg:flex items-center gap-2">
-            <Link
-              href="/admin/claims"
-              className="text-xs px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 rounded-lg font-medium transition-colors flex items-center gap-1.5"
-            >
-              Admin Forensic Portal
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
+          {/* Inquiry Helpline Phone Badge - +91 90042 64161 */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/80 border border-blue-500/40 text-blue-200 text-xs font-mono">
+            <Phone className="w-3.5 h-3.5 text-blue-400" />
+            <span>Inquiries: </span>
+            <strong className="text-white">+91 90042 64161</strong>
           </div>
         </div>
       </div>
@@ -233,7 +386,7 @@ export default function TixsurancePortalPage() {
         </div>
       )}
 
-      {/* Main Canvas Container - Styled identically to Canva Document Artboard */}
+      {/* Main Container */}
       <div className="max-w-4xl mx-auto px-4 mt-6">
         {/* Dynamic 100km Geofence Indicator Badge */}
         <div className="mb-4 bg-slate-800/90 border border-slate-700/80 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
@@ -280,16 +433,21 @@ export default function TixsurancePortalPage() {
                 </div>
                 <p className="text-xs text-blue-100/90 mt-0.5">Secure your Tickets now by filling this form</p>
               </div>
-              <div className="text-right">
-                <span className="text-xs font-bold tracking-wide uppercase px-2.5 py-1 bg-white/10 rounded border border-white/20">
-                  Booking ID: {bookingId}
-                </span>
+              <div className="flex items-center gap-2">
+                <label className="text-[11px] font-bold text-blue-200 uppercase">Booking ID / PNR*:</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 8935414874"
+                  value={bookingId}
+                  onChange={(e) => setBookingId(e.target.value)}
+                  className="px-2.5 py-1 text-xs font-mono font-bold bg-white/10 rounded border border-white/20 text-white placeholder-blue-300/60 focus:outline-none focus:bg-white/20"
+                />
               </div>
             </div>
 
             {/* Form Body */}
             <div className="p-6 md:p-8 space-y-6">
-              {/* Section: Attendee's Information */}
+              {/* Attendee Info Section */}
               <div>
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-4">
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
@@ -310,7 +468,7 @@ export default function TixsurancePortalPage() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-600 focus:outline-none bg-slate-50"
-                      placeholder="e.g. TIRTH DIXIT SHAH"
+                      placeholder="Enter full legal name as per government ID"
                     />
                   </div>
 
@@ -324,7 +482,7 @@ export default function TixsurancePortalPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-600 focus:outline-none bg-slate-50"
-                        placeholder="attendee@example.com"
+                        placeholder="yourname@domain.com"
                       />
                     </div>
                     <div>
@@ -336,7 +494,7 @@ export default function TixsurancePortalPage() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-600 focus:outline-none bg-slate-50"
-                        placeholder="+91 98XXX XXXXX"
+                        placeholder="+91 9XXXX XXXXX"
                       />
                     </div>
                   </div>
@@ -349,14 +507,14 @@ export default function TixsurancePortalPage() {
                         type="text"
                         value={addressLine1}
                         onChange={(e) => setAddressLine1(e.target.value)}
-                        placeholder="Address Line 1*"
+                        placeholder="Address Line 1 (Flat, House no., Building)*"
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                       />
                       <input
                         type="text"
                         value={addressLine2}
                         onChange={(e) => setAddressLine2(e.target.value)}
-                        placeholder="Address Line 2 (Optional)"
+                        placeholder="Address Line 2 (Street, Landmark - Optional)"
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                       />
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -406,32 +564,47 @@ export default function TixsurancePortalPage() {
                     </label>
                   </div>
 
-                  {/* Government ID Photo Upload */}
+                  {/* Real Government ID Photo Upload */}
                   <div className="pt-3">
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">Government ID Photo*</label>
+                    <input
+                      type="file"
+                      ref={govIdRef}
+                      accept="image/*,.pdf"
+                      onChange={(e) => setGovIdFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
                     <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-slate-600">
                         <FileText className="w-4 h-4 text-blue-600" />
-                        <span>{govIdUploaded ? 'Aadhar_Card_Front_Back.jpg (Verified)' : 'Select government ID image'}</span>
+                        <span className={govIdFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}>
+                          {govIdFile ? govIdFile.name : 'No file selected — Upload government ID image'}
+                        </span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setGovIdUploaded(!govIdUploaded)}
+                        onClick={() => govIdRef.current?.click()}
                         className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider transition-colors"
                       >
-                        {govIdUploaded ? 'REPLACE' : 'UPLOAD'}
+                        {govIdFile ? 'CHANGE' : 'UPLOAD'}
                       </button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Real-time Premium Summary */}
+              {/* Ticket Value & Real-time Premium Summary */}
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                <div>
-                  <span className="font-semibold text-slate-600">Insured Ticket Value: </span>
-                  <span className="font-bold text-slate-900 text-sm">₹{ticketFare.toLocaleString('en-IN')}</span>
-                  <span className="text-slate-400 ml-2">(@ 5% checkout protection)</span>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <span className="font-semibold text-slate-600">Ticket Fare (₹): </span>
+                  <input
+                    type="number"
+                    value={ticketFare || ''}
+                    placeholder="Enter Fare e.g. 3600"
+                    onChange={(e) => setTicketFare(Number(e.target.value))}
+                    className="w-32 px-2.5 py-1 text-sm font-bold border border-slate-300 rounded bg-white text-slate-900"
+                  />
+                  <span className="text-slate-400">(@ 5% fee)</span>
                 </div>
                 <div className="text-right">
                   <span className="font-semibold text-slate-600">Policy Premium: </span>
@@ -465,10 +638,11 @@ export default function TixsurancePortalPage() {
               {/* Green Submit Button matching Canva */}
               <button
                 type="button"
+                disabled={submitting}
                 onClick={handleTicketSubmit}
                 className="w-full py-3.5 bg-[#059669] hover:bg-emerald-700 text-white font-bold text-sm tracking-wider uppercase rounded shadow-lg shadow-emerald-700/20 transition-all flex items-center justify-center gap-2"
               >
-                SUBMIT AND ACTIVATE POLICY
+                {submitting ? 'ACTIVATING POLICY...' : 'SUBMIT AND ACTIVATE POLICY'}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -488,7 +662,7 @@ export default function TixsurancePortalPage() {
                 </h1>
               </div>
               <span className="text-xs font-bold uppercase px-2.5 py-1 bg-white/10 rounded">
-                Booking ID: {bookingId}
+                Booking ID: {bookingId || 'PENDING'}
               </span>
             </div>
 
@@ -519,6 +693,7 @@ export default function TixsurancePortalPage() {
                       type="text"
                       value={stayGuestName}
                       onChange={(e) => setStayGuestName(e.target.value)}
+                      placeholder="Primary guest name"
                       className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                     />
                   </div>
@@ -530,6 +705,7 @@ export default function TixsurancePortalPage() {
                         type="email"
                         value={stayGuestEmail}
                         onChange={(e) => setStayGuestEmail(e.target.value)}
+                        placeholder="guest@example.com"
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                       />
                     </div>
@@ -539,6 +715,7 @@ export default function TixsurancePortalPage() {
                         type="tel"
                         value={stayGuestPhone}
                         onChange={(e) => setStayGuestPhone(e.target.value)}
+                        placeholder="+91 9XXXX XXXXX"
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                       />
                     </div>
@@ -548,17 +725,26 @@ export default function TixsurancePortalPage() {
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                       Hotel / Airbnb Booking Confirmation PDF*
                     </label>
+                    <input
+                      type="file"
+                      ref={stayDocRef}
+                      accept=".pdf,image/*"
+                      onChange={(e) => setStayDocFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
                     <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-slate-600">
                         <FileText className="w-4 h-4 text-blue-600" />
-                        <span>{stayDocUploaded ? 'Taj_Santacruz_Booking_Confirmation.pdf' : 'Attach booking invoice'}</span>
+                        <span className={stayDocFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}>
+                          {stayDocFile ? stayDocFile.name : 'No file selected — Attach booking invoice PDF'}
+                        </span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setStayDocUploaded(!stayDocUploaded)}
+                        onClick={() => stayDocRef.current?.click()}
                         className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider"
                       >
-                        {stayDocUploaded ? 'REPLACE' : 'UPLOAD'}
+                        {stayDocFile ? 'CHANGE' : 'UPLOAD'}
                       </button>
                     </div>
                   </div>
@@ -568,7 +754,8 @@ export default function TixsurancePortalPage() {
                       <label className="block text-xs font-semibold text-slate-700 mb-1">Amount Booked (₹)*</label>
                       <input
                         type="number"
-                        value={stayAmount}
+                        value={stayAmount || ''}
+                        placeholder="Total hotel booking cost"
                         onChange={(e) => setStayAmount(Number(e.target.value))}
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50 font-bold"
                       />
@@ -576,7 +763,7 @@ export default function TixsurancePortalPage() {
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1">Total Premium to be Paid (5%)</label>
                       <div className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-100 font-bold text-blue-700">
-                        ₹{Math.round(stayAmount * 0.05)}
+                        ₹{Math.round((stayAmount || 0) * 0.05)}
                       </div>
                     </div>
                   </div>
@@ -622,7 +809,7 @@ export default function TixsurancePortalPage() {
                 </h1>
               </div>
               <span className="text-xs font-bold uppercase px-2.5 py-1 bg-white/10 rounded">
-                Booking ID: {bookingId}
+                Booking ID: {bookingId || 'PENDING'}
               </span>
             </div>
 
@@ -653,6 +840,7 @@ export default function TixsurancePortalPage() {
                       type="text"
                       value={travelName}
                       onChange={(e) => setTravelName(e.target.value)}
+                      placeholder="Primary traveler name"
                       className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                     />
                   </div>
@@ -664,6 +852,7 @@ export default function TixsurancePortalPage() {
                         type="email"
                         value={travelEmail}
                         onChange={(e) => setTravelEmail(e.target.value)}
+                        placeholder="traveler@example.com"
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                       />
                     </div>
@@ -673,6 +862,7 @@ export default function TixsurancePortalPage() {
                         type="tel"
                         value={travelPhone}
                         onChange={(e) => setTravelPhone(e.target.value)}
+                        placeholder="+91 9XXXX XXXXX"
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                       />
                     </div>
@@ -682,17 +872,26 @@ export default function TixsurancePortalPage() {
                     <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                       Flight / Train / Bus Booking Ticket PDF*
                     </label>
+                    <input
+                      type="file"
+                      ref={travelDocRef}
+                      accept=".pdf,image/*"
+                      onChange={(e) => setTravelDocFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
                     <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 flex items-center justify-between">
                       <div className="flex items-center gap-2 text-xs text-slate-600">
                         <FileText className="w-4 h-4 text-blue-600" />
-                        <span>{travelDocUploaded ? 'Akasa_Air_QP1120_Ticket.pdf' : 'Upload transit ticket PDF'}</span>
+                        <span className={travelDocFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}>
+                          {travelDocFile ? travelDocFile.name : 'No file selected — Upload transit ticket PDF'}
+                        </span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => setTravelDocUploaded(!travelDocUploaded)}
+                        onClick={() => travelDocRef.current?.click()}
                         className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider"
                       >
-                        {travelDocUploaded ? 'REPLACE' : 'UPLOAD'}
+                        {travelDocFile ? 'CHANGE' : 'UPLOAD'}
                       </button>
                     </div>
                   </div>
@@ -702,7 +901,8 @@ export default function TixsurancePortalPage() {
                       <label className="block text-xs font-semibold text-slate-700 mb-1">Amount Booked (₹)*</label>
                       <input
                         type="number"
-                        value={travelAmount}
+                        value={travelAmount || ''}
+                        placeholder="Total travel tickets cost"
                         onChange={(e) => setTravelAmount(Number(e.target.value))}
                         className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50 font-bold"
                       />
@@ -710,7 +910,7 @@ export default function TixsurancePortalPage() {
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1">Total Premium to be Paid (5%)</label>
                       <div className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-100 font-bold text-blue-700">
-                        ₹{Math.round(travelAmount * 0.05)}
+                        ₹{Math.round((travelAmount || 0) * 0.05)}
                       </div>
                     </div>
                   </div>
@@ -758,13 +958,20 @@ export default function TixsurancePortalPage() {
                 </div>
                 <p className="text-xs text-blue-100/90 mt-0.5">Local Policyholder Corridor (≤100km Radius)</p>
               </div>
-              <span className="text-xs font-bold uppercase px-2.5 py-1 bg-white/10 rounded">
-                Booking ID: {bookingId}
-              </span>
+              <div className="flex items-center gap-2">
+                <label className="text-[11px] font-bold text-blue-200">Booking ID:</label>
+                <input
+                  type="text"
+                  placeholder="Enter Booking ID"
+                  value={bookingId}
+                  onChange={(e) => setBookingId(e.target.value)}
+                  className="px-2.5 py-1 text-xs font-mono font-bold bg-white/10 rounded border border-white/20 text-white placeholder-blue-300/60 focus:outline-none"
+                />
+              </div>
             </div>
 
             <div className="p-6 md:p-8 space-y-6">
-              {/* Empathy Intro Message from Canva */}
+              {/* Empathy Intro Message */}
               <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900 leading-relaxed font-medium">
                 We are sorry to hear that you won&apos;t be heading for the event. Please let us know why, so that we can reimburse you.
               </div>
@@ -772,18 +979,8 @@ export default function TixsurancePortalPage() {
               {/* Attendee Info Section */}
               <div className="space-y-4">
                 <h2 className="text-sm font-bold text-slate-900 uppercase border-b border-slate-200 pb-2">
-                  Attendee&apos;s Information
+                  Claim Reason &amp; Proof of Emergency
                 </h2>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Booking ID</label>
-                  <input
-                    type="text"
-                    value={bookingId}
-                    readOnly
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-100 font-bold"
-                  />
-                </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Reason for cancellation*</label>
@@ -791,23 +988,33 @@ export default function TixsurancePortalPage() {
                     rows={2}
                     value={localClaimReason}
                     onChange={(e) => setLocalClaimReason(e.target.value)}
+                    placeholder="Describe emergency reason (hospitalization, injury, family emergency, etc.)"
                     className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">Proof of Emergency*</label>
+                  <input
+                    type="file"
+                    ref={localProofRef}
+                    accept=".pdf,image/*"
+                    onChange={(e) => setLocalProofFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
                   <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-slate-600">
                       <FileText className="w-4 h-4 text-blue-600" />
-                      <span>{localProofUploaded ? 'Doctor_Hospital_Emergency_Slip.pdf' : 'Attach medical / emergency certificate'}</span>
+                      <span className={localProofFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}>
+                        {localProofFile ? localProofFile.name : 'No file selected — Attach medical certificate / doctor note'}
+                      </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setLocalProofUploaded(!localProofUploaded)}
+                      onClick={() => localProofRef.current?.click()}
                       className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider"
                     >
-                      {localProofUploaded ? 'REPLACE' : 'UPLOAD'}
+                      {localProofFile ? 'CHANGE' : 'UPLOAD'}
                     </button>
                   </div>
                 </div>
@@ -834,8 +1041,8 @@ export default function TixsurancePortalPage() {
                     <div className="text-slate-700 leading-snug">{TIXSURANCE_HUB.address}</div>
                     <div className="pt-2 text-slate-600 border-t border-slate-100 flex items-center gap-1.5">
                       <Phone className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Please Coordinate with the below number for courier purposes: </span>
-                      <strong className="text-slate-900">{TIXSURANCE_HUB.phone}</strong>
+                      <span>Please Coordinate with the below number for courier purposes &amp; any inquiries: </span>
+                      <strong className="text-slate-900">+91 90042 64161</strong>
                     </div>
                   </div>
                 </div>
@@ -872,17 +1079,26 @@ export default function TixsurancePortalPage() {
                   </div>
 
                   {/* Video Upload Button */}
+                  <input
+                    type="file"
+                    ref={localVideoRef}
+                    accept="video/*"
+                    onChange={(e) => setLocalVideoFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
                   <div className="border border-slate-300 rounded-lg p-3 bg-white flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-slate-600">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      <span>{localVideoUploaded ? 'Wristband_Sealed_Packaging_Video.mp4 (Ready for verification)' : 'Upload packaging video'}</span>
+                      <Camera className="w-4 h-4 text-blue-600" />
+                      <span className={localVideoFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}>
+                        {localVideoFile ? localVideoFile.name : 'No video selected — Upload packaging video'}
+                      </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setLocalVideoUploaded(!localVideoUploaded)}
+                      onClick={() => localVideoRef.current?.click()}
                       className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider"
                     >
-                      {localVideoUploaded ? 'REPLACE VIDEO' : 'UPLOAD VIDEO'}
+                      {localVideoFile ? 'CHANGE VIDEO' : 'UPLOAD VIDEO'}
                     </button>
                   </div>
                 </div>
@@ -912,10 +1128,11 @@ export default function TixsurancePortalPage() {
               {/* Green Submit Claim Button */}
               <button
                 type="button"
+                disabled={submitting}
                 onClick={handleLocalClaimSubmit}
                 className="w-full py-3.5 bg-[#059669] hover:bg-emerald-700 text-white font-bold text-sm tracking-wider uppercase rounded shadow-lg shadow-emerald-700/20"
               >
-                SUBMIT CLAIM &amp; INITIATE 12-HOUR HUB DELIVERY
+                {submitting ? 'RECORDING CLAIM...' : 'SUBMIT CLAIM & INITIATE 12-HOUR HUB DELIVERY'}
               </button>
             </div>
           </div>
@@ -936,9 +1153,16 @@ export default function TixsurancePortalPage() {
                 </div>
                 <p className="text-xs text-blue-100/90 mt-0.5">Outstation Corridor (&gt;100km Radius) with Stay &amp; Travel</p>
               </div>
-              <span className="text-xs font-bold uppercase px-2.5 py-1 bg-white/10 rounded">
-                Booking ID: {bookingId}
-              </span>
+              <div className="flex items-center gap-2">
+                <label className="text-[11px] font-bold text-blue-200">Booking ID:</label>
+                <input
+                  type="text"
+                  placeholder="Enter Booking ID"
+                  value={bookingId}
+                  onChange={(e) => setBookingId(e.target.value)}
+                  className="px-2.5 py-1 text-xs font-mono font-bold bg-white/10 rounded border border-white/20 text-white placeholder-blue-300/60 focus:outline-none"
+                />
+              </div>
             </div>
 
             <div className="p-6 md:p-8 space-y-6">
@@ -948,18 +1172,8 @@ export default function TixsurancePortalPage() {
 
               <div className="space-y-4">
                 <h2 className="text-sm font-bold text-slate-900 uppercase border-b border-slate-200 pb-2">
-                  Attendee&apos;s Information
+                  Reason for Cancellation &amp; Proof of Emergency
                 </h2>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Booking ID</label>
-                  <input
-                    type="text"
-                    value={bookingId}
-                    readOnly
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-100 font-bold"
-                  />
-                </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Reason for cancellation*</label>
@@ -967,23 +1181,33 @@ export default function TixsurancePortalPage() {
                     rows={2}
                     value={outClaimReason}
                     onChange={(e) => setOutClaimReason(e.target.value)}
+                    placeholder="Describe emergency reason"
                     className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-slate-50"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5">Proof of Emergency*</label>
+                  <input
+                    type="file"
+                    ref={outProofRef}
+                    accept=".pdf,image/*"
+                    onChange={(e) => setOutProofFile(e.target.files?.[0] || null)}
+                    className="hidden"
+                  />
                   <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-slate-600">
                       <FileText className="w-4 h-4 text-blue-600" />
-                      <span>{outProofUploaded ? 'Medical_Emergency_Prescription.pdf' : 'Attach proof document'}</span>
+                      <span className={outProofFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}>
+                        {outProofFile ? outProofFile.name : 'No file selected — Attach emergency certificate'}
+                      </span>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setOutProofUploaded(!outProofUploaded)}
+                      onClick={() => outProofRef.current?.click()}
                       className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider"
                     >
-                      {outProofUploaded ? 'REPLACE' : 'UPLOAD'}
+                      {outProofFile ? 'CHANGE' : 'UPLOAD'}
                     </button>
                   </div>
                 </div>
@@ -999,17 +1223,26 @@ export default function TixsurancePortalPage() {
                       <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                         Cancellation Receipt of Stay (Hotel / Airbnb)*
                       </label>
+                      <input
+                        type="file"
+                        ref={outStayReceiptRef}
+                        accept=".pdf,image/*"
+                        onChange={(e) => setOutStayReceiptFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                      />
                       <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-xs text-slate-600">
                           <Hotel className="w-4 h-4 text-blue-600" />
-                          <span>{outStayReceiptUploaded ? 'Taj_Hotel_Cancellation_Invoice.pdf' : 'Upload official stay cancellation receipt'}</span>
+                          <span className={outStayReceiptFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}>
+                            {outStayReceiptFile ? outStayReceiptFile.name : 'No file selected — Upload stay cancellation receipt'}
+                          </span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => setOutStayReceiptUploaded(!outStayReceiptUploaded)}
+                          onClick={() => outStayReceiptRef.current?.click()}
                           className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider"
                         >
-                          {outStayReceiptUploaded ? 'REPLACE' : 'UPLOAD'}
+                          {outStayReceiptFile ? 'CHANGE' : 'UPLOAD'}
                         </button>
                       </div>
                     </div>
@@ -1018,17 +1251,26 @@ export default function TixsurancePortalPage() {
                       <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                         Cancellation Receipt of Travel (Airline / IRCTC Railways)*
                       </label>
+                      <input
+                        type="file"
+                        ref={outTravelReceiptRef}
+                        accept=".pdf,image/*"
+                        onChange={(e) => setOutTravelReceiptFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                      />
                       <div className="border border-slate-300 rounded-lg p-3 bg-slate-50 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-xs text-slate-600">
                           <Plane className="w-4 h-4 text-blue-600" />
-                          <span>{outTravelReceiptUploaded ? 'Akasa_Air_Cancellation_Receipt.pdf' : 'Upload official travel cancellation receipt'}</span>
+                          <span className={outTravelReceiptFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}>
+                            {outTravelReceiptFile ? outTravelReceiptFile.name : 'No file selected — Upload travel cancellation receipt'}
+                          </span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => setOutTravelReceiptUploaded(!outTravelReceiptUploaded)}
+                          onClick={() => outTravelReceiptRef.current?.click()}
                           className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider"
                         >
-                          {outTravelReceiptUploaded ? 'REPLACE' : 'UPLOAD'}
+                          {outTravelReceiptFile ? 'CHANGE' : 'UPLOAD'}
                         </button>
                       </div>
                     </div>
@@ -1055,15 +1297,24 @@ export default function TixsurancePortalPage() {
               {/* Green Submit Claim Button */}
               <button
                 type="button"
+                disabled={submitting}
                 onClick={handleOutstationClaimSubmit}
                 className="w-full py-3.5 bg-[#059669] hover:bg-emerald-700 text-white font-bold text-sm tracking-wider uppercase rounded shadow-lg shadow-emerald-700/20"
               >
-                SUBMIT CLAIM FOR FORENSIC VERIFICATION
+                {submitting ? 'AUDITING...' : 'SUBMIT CLAIM FOR FORENSIC VERIFICATION'}
               </button>
             </div>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function TixsurancePortalPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Loading Tixsurance...</div>}>
+      <TixsuranceContent />
+    </Suspense>
   );
 }

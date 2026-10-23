@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSession } from '@/lib/session';
 import { getPolicies, getClaims, saveClaim } from '@/lib/tixsurance';
 
 export async function GET(req: NextRequest) {
+  const session = await getSession();
+  if (!session || session.role !== 'admin') {
+    return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+  }
+
   const policies = getPolicies();
   const claims = getClaims();
 
@@ -35,6 +41,11 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
     const body = await req.json();
     const { claimId, action, notes, rejectionReason } = body;
 
