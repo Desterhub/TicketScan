@@ -103,6 +103,14 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+            <Link
+              href="/admin/passengers"
+              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Users className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Traveler Intelligence</span>
+            </Link>
+
             <button
               onClick={() => setShowPasswordModal(true)}
               className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition cursor-pointer"
@@ -240,8 +248,31 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Admin Navigation Hub: Users & Tickets */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Admin Navigation Hub: Users, Travelers & Tickets */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <Link
+            href="/admin/passengers"
+            className="p-6 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/50 transition group space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition">
+                <Receipt className="w-6 h-6" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                <span>Traveler Intelligence</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-emerald-500/20 text-emerald-300 uppercase font-bold">
+                  New
+                </span>
+              </h4>
+              <p className="text-xs text-slate-400 mt-1">
+                Track individual travelers, cross-ticket history, split fare shares, and cumulative expenditures.
+              </p>
+            </div>
+          </Link>
+
           <Link
             href="/admin/users"
             className="p-6 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-sky-500/50 transition group space-y-4"

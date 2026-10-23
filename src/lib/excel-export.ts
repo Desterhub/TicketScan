@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 import sharp from 'sharp';
 import { Ticket, PassengerItem } from '@/types/database';
+import { calculateSplitFare } from './passenger-intelligence';
 
 export interface ExportTicketsOptions {
   tickets: Ticket[];
@@ -219,12 +220,15 @@ export async function generateTicketsExcelWorkbook(
     quota: string;
     distance: string;
     transactionId: string;
-    fare: string;
+    individualFare: string;
+    totalTicketFare: string;
     tamperRiskScore: number;
     riskCategory: string;
     confidence: number;
     ticketId: string;
     createdAt: string;
+    isFirstInTicket: boolean;
+    isLastInTicket: boolean;
   }
 
   const allPassengerRows: FlatPassengerRow[] = [];
@@ -307,33 +311,41 @@ export async function generateTicketsExcelWorkbook(
 
     totalPassengersCount += pList.length;
 
+    const splitInfo = calculateSplitFare(fareStr, pList.length);
+
     pList.forEach((p, idx) => {
+      const isFirst = idx === 0;
+      const isLast = idx === pList.length - 1;
+
       allPassengerRows.push({
         paxNumber: typeof p.num === 'number' ? p.num : idx + 1,
-        pnr: t.pnr_booking_id || 'N/A',
+        pnr: isFirst ? (t.pnr_booking_id || 'N/A') : '',
         passengerName: p.name || 'N/A',
         age: p.age !== undefined && p.age !== null ? p.age : 'N/A',
         gender: p.gender || 'N/A',
         bookingStatus: p.booking_status || t.booking_status || 'N/A',
         currentStatus: p.current_status || t.booking_status || 'N/A',
         coachSeat: p.seat || t.seat_class_coach || 'N/A',
-        transportMode: (t.transport_mode || 'unknown').toUpperCase(),
-        carrierName: t.carrier_name || 'N/A',
-        origin: t.boarding_place || 'N/A',
-        destination: t.destination_place || 'N/A',
-        departureDate: depDate,
-        departureTime: depTime,
-        arrivalDate: arrDate,
-        arrivalTime: arrTime,
-        quota,
-        distance,
-        transactionId: txnId,
-        fare: rawMeta.total_fare || 'N/A',
+        transportMode: isFirst ? (t.transport_mode || 'unknown').toUpperCase() : '',
+        carrierName: isFirst ? (t.carrier_name || 'N/A') : '',
+        origin: isFirst ? (t.boarding_place || 'N/A') : '',
+        destination: isFirst ? (t.destination_place || 'N/A') : '',
+        departureDate: isFirst ? depDate : '',
+        departureTime: isFirst ? depTime : '',
+        arrivalDate: isFirst ? arrDate : '',
+        arrivalTime: isFirst ? arrTime : '',
+        quota: isFirst ? quota : '',
+        distance: isFirst ? distance : '',
+        transactionId: isFirst ? txnId : '',
+        individualFare: splitInfo.formattedSplit, // Split fare per individual (e.g. ₹471.80, ₹11,070.00)
+        totalTicketFare: isFirst ? `${splitInfo.formattedTotal} (${pList.length} Pax)` : '',
         tamperRiskScore: rScore,
         riskCategory: riskCat,
         confidence: Number(t.extraction_confidence || 0),
-        ticketId: t.id,
+        ticketId: isFirst ? t.id : '',
         createdAt: t.created_at ? t.created_at.split('T')[0] : 'N/A',
+        isFirstInTicket: isFirst,
+        isLastInTicket: isLast,
       });
     });
   }
@@ -527,7 +539,7 @@ export async function generateTicketsExcelWorkbook(
   });
 
   // Title Banner
-  wsPassengers.mergeCells('A1:W1');
+  wsPassengers.mergeCells('A1:X1');
   const paxTitle = wsPassengers.getCell('A1');
   paxTitle.value = `PASSENGER MANIFEST MASTER — INDIVIDUAL PASSENGER RECORDS (${allPassengerRows.length} Manifested Passengers)`;
   paxTitle.font = { name: 'Segoe UI', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
@@ -536,9 +548,9 @@ export async function generateTicketsExcelWorkbook(
   wsPassengers.getRow(1).height = 34;
 
   // Subtitle
-  wsPassengers.mergeCells('A2:W2');
+  wsPassengers.mergeCells('A2:X2');
   const paxSub = wsPassengers.getCell('A2');
-  paxSub.value = 'Each row represents an individual verified passenger with designated coach, seat, booking status, route, and financial allocation.';
+  paxSub.value = 'Each row represents an individual verified passenger with split individual fare, designated coach, seat, booking status, and route.';
   paxSub.font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FF94A3B8' } };
   paxSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
   paxSub.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -565,6 +577,7 @@ export async function generateTicketsExcelWorkbook(
     'Quota',
     'Distance (KM)',
     'Transaction ID',
+    'Individual Split Fare',
     'Total Ticket Fare',
     'Integrity Level',
     'AI Confidence',
@@ -614,7 +627,8 @@ export async function generateTicketsExcelWorkbook(
       p.quota,
       p.distance,
       p.transactionId,
-      p.fare,
+      p.individualFare,
+      p.totalTicketFare,
       p.riskCategory,
       `${Math.round(p.confidence * 100)}%`,
       p.ticketId,
@@ -629,15 +643,17 @@ export async function generateTicketsExcelWorkbook(
       cell.font = { name: 'Segoe UI', size: 10 };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: zebraFill } };
       cell.border = {
-        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        bottom: p.isLastInTicket
+          ? { style: 'medium', color: { argb: 'FF000000' } } // Thick black border separating ticket groups (Image 2)
+          : { style: 'thin', color: { argb: 'FFE2E8F0' } },
         right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
         left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
       };
       cell.alignment = { vertical: 'middle' };
     }
 
-    // Centered columns
-    [1, 2, 4, 5, 9, 13, 14, 15, 16, 17, 18, 19, 21, 22].forEach((colIdx) => {
+    // Centered columns: #, PNR, Age, Gender, Mode, Dates, Times, Quota, Dist, Txn, Integrity, Conf, Ticket ID
+    [1, 2, 4, 5, 9, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24].forEach((colIdx) => {
       r.getCell(colIdx).alignment = { vertical: 'middle', horizontal: 'center' };
     });
 
@@ -661,8 +677,18 @@ export async function generateTicketsExcelWorkbook(
       statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
     }
 
-    // Risk coloring
-    const riskCell = r.getCell(21);
+    // Individual Split Fare cell (Column 20)
+    const splitFareCell = r.getCell(20);
+    splitFareCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF047857' } };
+    splitFareCell.alignment = { vertical: 'middle', horizontal: 'right' };
+
+    // Total Ticket Fare cell (Column 21)
+    const totalFareCell = r.getCell(21);
+    totalFareCell.font = { name: 'Segoe UI', size: 10, bold: p.isFirstInTicket, color: { argb: 'FF0F172A' } };
+    totalFareCell.alignment = { vertical: 'middle', horizontal: 'right' };
+
+    // Risk coloring (Column 22)
+    const riskCell = r.getCell(22);
     if (p.riskCategory === 'VERIFIED') {
       riskCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECFDF5' } };
       riskCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF059669' } };

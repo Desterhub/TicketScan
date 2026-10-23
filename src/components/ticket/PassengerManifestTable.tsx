@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Ticket, PassengerItem } from '@/types/database';
+import { calculateSplitFare } from '@/lib/passenger-intelligence';
 import {
   Users,
   CreditCard,
@@ -44,6 +45,9 @@ export function PassengerManifestTable({ ticket }: Props) {
           seat: ticket.seat_class_coach,
         }))
       : [];
+
+  const fareStr = meta.total_fare || meta.ticket_fare || '';
+  const splitInfo = calculateSplitFare(fareStr, passengers.length);
 
   const formatUtcTime = (iso: string | null) => {
     if (!iso) return '--:--';
@@ -188,6 +192,18 @@ export function PassengerManifestTable({ ticket }: Props) {
                   </div>
                 </div>
 
+                {/* Individual Split Fare in Mobile Card */}
+                {splitInfo.splitAmount > 0 && (
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/70 text-xs font-mono">
+                    <span className="text-[10px] text-slate-500 uppercase font-semibold">
+                      Individual Fare Share:
+                    </span>
+                    <span className="font-bold text-emerald-400">
+                      {splitInfo.formattedSplit} {passengers.length > 1 ? `(1 of ${passengers.length} pax)` : ''}
+                    </span>
+                  </div>
+                )}
+
                 {/* Status Section */}
                 <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/70 text-xs">
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -223,6 +239,7 @@ export function PassengerManifestTable({ ticket }: Props) {
                 <th className="py-3 px-5">Booking Status</th>
                 <th className="py-3 px-5">Current Status</th>
                 <th className="py-3 px-5">{isFlight ? 'Seat / Cabin Class' : 'Coach / Seat / Class'}</th>
+                <th className="py-3 px-5">Individual Split Fare</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-slate-200">
@@ -258,11 +275,14 @@ export function PassengerManifestTable({ ticket }: Props) {
                     <td className="py-3.5 px-5 font-mono font-medium text-amber-300 whitespace-nowrap">
                       {p.seat ? (isFlight ? `Seat ${p.seat}` : p.seat) : (ticket.seat_class_coach || 'Assigned')}
                     </td>
+                    <td className="py-3.5 px-5 font-mono font-bold text-emerald-400 whitespace-nowrap">
+                      {splitInfo.formattedSplit}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-slate-400 font-mono">
+                  <td colSpan={7} className="py-6 text-center text-slate-400 font-mono">
                     No individual passenger names recorded on ticket
                   </td>
                 </tr>
@@ -297,6 +317,14 @@ export function PassengerManifestTable({ ticket }: Props) {
                 </span>
                 <span className="font-mono font-semibold text-slate-200">
                   {meta.convenience_fee}
+                </span>
+              </div>
+            )}
+            {splitInfo.paxCount > 1 && splitInfo.splitAmount > 0 && (
+              <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
+                <span className="text-slate-400">Individual Share</span>
+                <span className="font-mono font-bold text-emerald-400">
+                  {splitInfo.formattedSplit} <span className="text-slate-400 text-[10px]">({splitInfo.paxCount} pax)</span>
                 </span>
               </div>
             )}

@@ -10,6 +10,7 @@ import {
   ShieldAlert,
   LogOut,
   User,
+  Users,
   Menu,
   X,
   Play,
@@ -62,7 +63,10 @@ export function Navbar({ user }: NavbarProps) {
   ];
 
   if (user?.role === 'admin') {
-    navLinks.push({ href: '/admin/dashboard', label: 'Admin Command', icon: ShieldAlert });
+    navLinks.push(
+      { href: '/admin/dashboard', label: 'Admin Command', icon: ShieldAlert },
+      { href: '/admin/passengers', label: 'Traveler Intelligence', icon: Users }
+    );
   }
 
   return (
