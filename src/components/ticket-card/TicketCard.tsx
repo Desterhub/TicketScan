@@ -289,8 +289,8 @@ export function TicketCard({
           />
         </div>
 
-        {/* Left Side: Mode Icon + Carrier Name + Clearance + Tamper Badge */}
-        <div className="relative z-10 flex flex-col justify-between h-full max-w-[70%] sm:max-w-[65%]">
+        {/* Left Side: Mode Icon + Carrier Name + Clearance */}
+        <div className="relative z-10 flex flex-col justify-center h-full max-w-[70%] sm:max-w-[65%]">
           <div className="flex items-center gap-3">
             {/* Rounded-square icon badge matching mockup */}
             <div
@@ -319,8 +319,6 @@ export function TicketCard({
               </span>
             </div>
           </div>
-
-          <div>{getTamperBadge()}</div>
         </div>
       </div>
 

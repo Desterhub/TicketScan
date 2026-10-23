@@ -204,7 +204,7 @@ export default function UserDashboardPage() {
               className="bg-slate-950 border border-slate-800 text-slate-300 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 outline-none text-[11px] sm:text-xs"
             >
               <option value="all">Risk: All</option>
-              <option value="low">Clean Integrity (Low)</option>
+              <option value="low">Low Risk</option>
               <option value="flagged">Flagged (Med / High)</option>
             </select>
           </div>
