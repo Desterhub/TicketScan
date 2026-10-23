@@ -395,66 +395,45 @@ function TixsuranceContent() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 pb-20">
-      {/* Top Banner Navigation & Screen Switcher */}
+      {/* Top Banner Navigation */}
       <div className="bg-slate-950 border-b border-slate-800 sticky top-0 z-40 px-3 sm:px-4 py-2.5 sm:py-3 shadow-md">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
-          {/* Left: Tixsurance Branding with distinct colors */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
-              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <TixsuranceBrandLogo className="text-base sm:text-lg" />
-                <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  EVENT &amp; TRAVEL SHIELD
-                </span>
-              </div>
-              <p className="text-[10px] sm:text-xs text-slate-400 truncate hidden md:block">
-                Zero-Fraud Event Ticket, Stay &amp; Travel Protection Ecosystem
-              </p>
-            </div>
-          </div>
-
-          {/* Right: Slidebar Trigger Button (EXACTLY NEXT TO TIXSURANCE ON SAME ROW!) */}
-          <div className="flex items-center gap-2 shrink-0">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
+          {/* Left: 3 lines button placed LEFT of TIXSURANCE symbol, no description */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* The 3 lines (hamburger menu) button */}
             <button
               type="button"
               onClick={() => setSlidebarOpen(true)}
-              className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-400/50 text-slate-200 transition-all shadow-sm group active:scale-[0.98]"
-              title="Open Navigation Slidebar"
-              aria-label="Open Navigation Slidebar"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-400/50 flex items-center justify-center text-slate-200 hover:text-white transition-all shadow-sm active:scale-95"
+              aria-label="Open menu"
+              title="Open Navigation Menu"
             >
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-cyan-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </div>
-              <div className="text-left">
-                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                  <span>Navigation</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                </div>
-                <div className="text-xs font-bold text-white whitespace-nowrap">
-                  {SCREENS.find((s) => s.id === activeScreen)?.title || '1 - Ticket Protection'}
-                </div>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-transform ml-0.5 hidden sm:block" />
+              <Menu className="w-5 h-5 text-cyan-400" />
             </button>
 
-            {/* Inquiry Helpline Phone Badge - Desktop */}
-            <a
-              href="tel:+919004264161"
-              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/80 border border-blue-500/40 text-blue-200 text-xs font-mono hover:bg-blue-900/60 transition-colors whitespace-nowrap"
-            >
-              <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-              <span className="text-slate-300">Inquiries:</span>
-              <strong className="text-white whitespace-nowrap font-bold font-mono">+91 90042 64161</strong>
-            </a>
+            {/* TIXSURANCE symbol */}
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+
+            {/* TIXSURANCE Name - NO DESCRIPTION */}
+            <TixsuranceBrandLogo className="text-lg sm:text-xl" />
           </div>
+
+          {/* Right: Phone Helpline Badge */}
+          <a
+            href="tel:+919004264161"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/80 border border-blue-500/40 text-blue-200 text-xs font-mono hover:bg-blue-900/60 transition-colors whitespace-nowrap"
+          >
+            <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="text-slate-300 hidden sm:inline">Inquiries:</span>
+            <strong className="text-white whitespace-nowrap font-bold font-mono">+91 90042 64161</strong>
+          </a>
         </div>
       </div>
 
       {/* ========================================================
-          SLIDEBAR (DRAWER): SLIDES OUT WHEN NEEDED & SLIDES IN
+          SLIDEBAR (DRAWER): CLEAN, SIMPLE & EASY TO UNDERSTAND
       ======================================================== */}
       {/* Backdrop Blur Overlay */}
       <div
@@ -467,216 +446,161 @@ function TixsuranceContent() {
 
       {/* Slide-out Navigation Drawer from Left */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-slate-950 border-r border-slate-800 shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 bottom-0 w-72 sm:w-80 bg-slate-950 border-r border-slate-800 shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out ${
           slidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         role="dialog"
         aria-modal="true"
-        aria-label="Tixsurance Navigation Slidebar"
+        aria-label="Tixsurance Menu"
       >
         {/* Drawer Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-800/90 flex items-center justify-between bg-slate-900/60">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20">
-              <ShieldCheck className="w-5 h-5 text-white" />
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow shadow-blue-500/20">
+              <ShieldCheck className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <TixsuranceBrandLogo className="text-base" />
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  PORTAL
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">Navigation &amp; Claims Hub</p>
-            </div>
+            <TixsuranceBrandLogo className="text-base" />
           </div>
           <button
             type="button"
             onClick={() => setSlidebarOpen(false)}
-            className="w-8 h-8 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors border border-slate-700/60"
-            aria-label="Close navigation slidebar"
+            className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+            aria-label="Close menu"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Prominent Return to TicketScan Dashboard Option */}
-        <div className="p-4 pb-0">
+        {/* Back to TicketScan Dashboard */}
+        <div className="p-3 pb-1">
           <Link
             href="/dashboard"
             onClick={() => setSlidebarOpen(false)}
-            className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-blue-950/80 via-slate-900 to-indigo-950/70 border border-blue-500/40 hover:border-cyan-400 text-white transition-all shadow-md group"
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-all group"
           >
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
-                <LayoutDashboard className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span>Back to TicketScan Dashboard</span>
-                </div>
-                <div className="text-[10px] text-slate-400">Return to ticket management &amp; scans</div>
-              </div>
-            </div>
-            <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform shrink-0" />
+            <LayoutDashboard className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+            <span>Back to Dashboard</span>
           </Link>
         </div>
 
-        {/* Drawer Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-5">
-          {/* Geofence quick indicator */}
-          <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
-              <div>
-                <div className="font-bold text-slate-200">Active Geofence</div>
-                <div className="text-[11px] text-slate-400">~{geofence.distanceKm} km from venue</div>
-              </div>
-            </div>
-            <span
-              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                geofence.policyType === 'LOCAL'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-              }`}
-            >
-              {geofence.policyType === 'LOCAL' ? '≤100km Local' : '>100km Outstation'}
-            </span>
-          </div>
-
-          {/* Section 1: Protection Modules */}
+        {/* Clean, Simple Menu Items (NO complex text or descriptions) */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+          {/* Section: Protection */}
           <div>
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 px-1 flex items-center justify-between">
-              <span>Protection Onboarding</span>
-              <span className="text-[10px] font-mono text-blue-400">Phase 1 - 3</span>
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 mb-1.5">
+              Protection
             </div>
-            <div className="space-y-2">
-              {SCREENS.slice(0, 3).map((screen) => {
-                const Icon = screen.icon;
-                const isSelected = activeScreen === screen.id;
-                return (
-                  <button
-                    key={screen.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveScreen(screen.id);
-                      setSlidebarOpen(false);
-                    }}
-                    className={`w-full text-left p-3 rounded-xl transition-all border flex items-start gap-3 group ${
-                      isSelected
-                        ? 'bg-blue-600/15 border-blue-500 text-white shadow-md shadow-blue-900/20'
-                        : 'bg-slate-900/70 border-slate-800/80 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
-                    }`}
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                        isSelected
-                          ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/40'
-                          : 'bg-slate-800 text-slate-400 group-hover:text-blue-400 group-hover:bg-slate-700'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <span className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-slate-200'}`}>
-                          {screen.title}
-                        </span>
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded border ${screen.badgeColor}`}>
-                          {screen.badge}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{screen.description}</p>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveScreen('ticket');
+                  setSlidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-left ${
+                  activeScreen === 'ticket'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
+                    : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+                }`}
+              >
+                <ShieldCheck className={`w-4 h-4 shrink-0 ${activeScreen === 'ticket' ? 'text-white' : 'text-cyan-400'}`} />
+                <span>1. Ticket Protection</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveScreen('stay');
+                  setSlidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-left ${
+                  activeScreen === 'stay'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
+                    : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+                }`}
+              >
+                <Hotel className={`w-4 h-4 shrink-0 ${activeScreen === 'stay' ? 'text-white' : 'text-indigo-400'}`} />
+                <span>2. Stay Shield</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveScreen('travel');
+                  setSlidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-left ${
+                  activeScreen === 'travel'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-bold'
+                    : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+                }`}
+              >
+                <Plane className={`w-4 h-4 shrink-0 ${activeScreen === 'travel' ? 'text-white' : 'text-sky-400'}`} />
+                <span>3. Travel Shield</span>
+              </button>
             </div>
           </div>
 
-          {/* Section 2: Emergency Claims Modules */}
+          {/* Section: Claims */}
           <div>
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 px-1 flex items-center justify-between">
-              <span>Emergency Claim Filing</span>
-              <span className="text-[10px] font-mono text-amber-400">Phase 4 - 5</span>
+            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 mb-1.5">
+              Claims
             </div>
-            <div className="space-y-2">
-              {SCREENS.slice(3, 5).map((screen) => {
-                const Icon = screen.icon;
-                const isSelected = activeScreen === screen.id;
-                return (
-                  <button
-                    key={screen.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveScreen(screen.id);
-                      setSlidebarOpen(false);
-                    }}
-                    className={`w-full text-left p-3 rounded-xl transition-all border flex items-start gap-3 group ${
-                      isSelected
-                        ? 'bg-amber-600/15 border-amber-500 text-white shadow-md shadow-amber-900/20'
-                        : 'bg-slate-900/70 border-slate-800/80 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
-                    }`}
-                  >
-                    <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                        isSelected
-                          ? 'bg-amber-600 text-white shadow-sm shadow-amber-500/40'
-                          : 'bg-slate-800 text-slate-400 group-hover:text-amber-400 group-hover:bg-slate-700'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <span className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-slate-200'}`}>
-                          {screen.title}
-                        </span>
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded border ${screen.badgeColor}`}>
-                          {screen.badge}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{screen.description}</p>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveScreen('claim_local');
+                  setSlidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-left ${
+                  activeScreen === 'claim_local'
+                    ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30 font-bold'
+                    : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+                }`}
+              >
+                <MapPin className={`w-4 h-4 shrink-0 ${activeScreen === 'claim_local' ? 'text-white' : 'text-amber-400'}`} />
+                <span>4. Claim (Local ≤100km)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveScreen('claim_outstation');
+                  setSlidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-left ${
+                  activeScreen === 'claim_outstation'
+                    ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30 font-bold'
+                    : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+                }`}
+              >
+                <ShieldAlert className={`w-4 h-4 shrink-0 ${activeScreen === 'claim_outstation' ? 'text-white' : 'text-amber-400'}`} />
+                <span>5. Claim (Outstation &gt;100km)</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Drawer Footer with Inquiries helpline & close button */}
-        <div className="p-4 border-t border-slate-800/90 bg-slate-900/80 space-y-2.5">
+        {/* Drawer Footer */}
+        <div className="p-3 border-t border-slate-800/80 bg-slate-900/60 space-y-2">
           <a
             href="tel:+919004264161"
-            className="flex items-center gap-3 p-3 rounded-xl bg-blue-950/60 border border-blue-500/40 hover:bg-blue-900/50 transition-colors text-left"
+            className="flex items-center justify-center gap-2 p-2.5 rounded-xl bg-blue-950/60 border border-blue-500/30 hover:bg-blue-900/50 text-xs font-mono transition-colors"
           >
-            <div className="w-8 h-8 rounded-lg bg-blue-600/30 flex items-center justify-center text-cyan-400 shrink-0">
-              <Phone className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-[10px] font-semibold text-blue-300 uppercase tracking-wider">Helpline &amp; Inquiries</div>
-              <div className="text-xs font-bold text-white font-mono whitespace-nowrap">+91 90042 64161</div>
-            </div>
+            <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="text-slate-300 text-[11px]">Helpline:</span>
+            <strong className="text-white font-bold whitespace-nowrap">+91 90042 64161</strong>
           </a>
 
           <Link
             href="/"
             onClick={() => setSlidebarOpen(false)}
-            className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 border border-slate-800"
+            className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 border border-slate-800"
           >
-            <Home className="w-3.5 h-3.5 text-slate-400" />
+            <Home className="w-3.5 h-3.5" />
             <span>TicketScan Home</span>
           </Link>
-
-          <button
-            type="button"
-            onClick={() => setSlidebarOpen(false)}
-            className="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 border border-slate-700/80"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Slide Back In (Close)</span>
-          </button>
         </div>
       </aside>
 
