@@ -1,11 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import { User, Ticket, AuditLog } from '@/types/database';
+import { User, Ticket, AuditLog, LocationImage } from '@/types/database';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const TICKETS_FILE = path.join(DATA_DIR, 'tickets.json');
 const AUDIT_FILE = path.join(DATA_DIR, 'audit_logs.json');
+const LOCATION_IMAGES_FILE = path.join(DATA_DIR, 'location_images.json');
 
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -44,4 +45,7 @@ export const localDb = {
   
   getAuditLogs: (): AuditLog[] => readJsonFile<AuditLog>(AUDIT_FILE),
   saveAuditLogs: (logs: AuditLog[]) => writeJsonFile<AuditLog>(AUDIT_FILE, logs),
+
+  getLocationImages: (): LocationImage[] => readJsonFile<LocationImage>(LOCATION_IMAGES_FILE),
+  saveLocationImages: (images: LocationImage[]) => writeJsonFile<LocationImage>(LOCATION_IMAGES_FILE, images),
 };

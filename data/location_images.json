@@ -1,0 +1,47 @@
+[
+  {
+    "id": "loc-1792755663997-uaki5w",
+    "location_key": "delhi",
+    "display_name": "Delhi (DEL)",
+    "image_path": "/images/locations/delhi.jpg",
+    "generation_prompt": "A beautiful, warm golden-hour photograph representing Delhi, India — featuring a well-known landmark or skyline view of the city, cinematic lighting, travel-photography style, no text or watermarks, no people in close-up, wide atmospheric shot.",
+    "source": "curated_stock",
+    "created_at": "2026-10-23T11:41:03.997Z"
+  },
+  {
+    "id": "loc-1792755664017-ym6mk9",
+    "location_key": "mumbai",
+    "display_name": "Mumbai (BOM)",
+    "image_path": "/images/locations/mumbai.jpg",
+    "generation_prompt": "A beautiful, warm golden-hour photograph representing Mumbai, India — featuring a well-known landmark or skyline view of the city, cinematic lighting, travel-photography style, no text or watermarks, no people in close-up, wide atmospheric shot.",
+    "source": "curated_stock",
+    "created_at": "2026-10-23T11:41:04.017Z"
+  },
+  {
+    "id": "loc-1792755703116-p20t86",
+    "location_key": "bandra-terminus",
+    "display_name": "Bandra Terminus (BDTS)",
+    "image_path": "/images/locations/bandra-terminus.jpg",
+    "generation_prompt": "A realistic photograph of Bandra Terminus railway station in India at dusk/dawn, showing the station signage/platform, warm ambient lighting, travel-photography style, no readable text beyond the station name sign, no close-up faces.",
+    "source": "curated_stock",
+    "created_at": "2026-10-23T11:41:43.116Z"
+  },
+  {
+    "id": "loc-1792755703151-h81hs4",
+    "location_key": "surat",
+    "display_name": "Surat (ST)",
+    "image_path": "/images/locations/surat.jpg",
+    "generation_prompt": "A realistic photograph of Surat railway station in India at dusk/dawn, showing the station signage/platform, warm ambient lighting, travel-photography style, no readable text beyond the station name sign, no close-up faces.",
+    "source": "curated_stock",
+    "created_at": "2026-10-23T11:41:43.151Z"
+  },
+  {
+    "id": "loc-1792755741161-wivvjx",
+    "location_key": "pune",
+    "display_name": "Pune (PNQ)",
+    "image_path": "/images/locations/pune.jpg",
+    "generation_prompt": "A beautiful, warm golden-hour photograph representing Pune, India — featuring historical stone architecture at sunset, travel-photography style, atmospheric wide shot.",
+    "source": "curated_stock",
+    "created_at": "2026-10-23T11:42:21.161Z"
+  }
+]

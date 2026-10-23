@@ -79,6 +79,28 @@ body {
   );
 }
 
+.barcode-dark {
+  background: repeating-linear-gradient(
+    90deg,
+    #1e293b 0,
+    #1e293b 2.5px,
+    transparent 2.5px,
+    transparent 4.5px,
+    #0f172a 4.5px,
+    #0f172a 7.5px,
+    transparent 7.5px,
+    transparent 9.5px,
+    #1e293b 9.5px,
+    #1e293b 11px,
+    transparent 11px,
+    transparent 13.5px,
+    #0f172a 13.5px,
+    #0f172a 16.5px,
+    transparent 16.5px,
+    transparent 19px
+  );
+}
+
 /* Doorway portal glowing rim */
 .portal-glow-rim {
   box-shadow: 0 0 60px 10px rgba(245, 158, 11, 0.35),

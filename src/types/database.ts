@@ -110,3 +110,13 @@ export interface AuthSession {
   role: UserRole;
   fullName: string | null;
 }
+
+export interface LocationImage {
+  id: string;
+  location_key: string;
+  display_name: string;
+  image_path: string;
+  generation_prompt: string | null;
+  source: 'ai_generated' | 'curated_stock';
+  created_at: string;
+}

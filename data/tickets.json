@@ -1,0 +1,73 @@
+[
+  {
+    "id": "t-mockup-train-bdts-st",
+    "user_id": "a0000000-0000-0000-0000-000000000001",
+    "file_path": "demo/train_12935.pdf",
+    "file_type": "pdf",
+    "transport_mode": "train",
+    "passenger_name": "DIXIT SHAH",
+    "passenger_age": 42,
+    "booking_status": "confirmed",
+    "pnr_booking_id": "8554596467",
+    "boarding_place": "BANDRA TERMINUS (BDTS)",
+    "destination_place": "SURAT (ST)",
+    "departure_datetime": "2026-10-09T06:35:00Z",
+    "arrival_datetime": "2026-10-09T10:40:00Z",
+    "carrier_name": "12935 / BDTS ST SF EXP",
+    "seat_class_coach": "CHAIR CAR (CC) — Coach C1, Seat 42",
+    "raw_extraction_json": {
+      "passengers": [
+        { "name": "DIXIT SHAH", "age": 42, "seat": "C1-42", "booking_status": "CNF" },
+        { "name": "PRIYA SHAH", "age": 40, "seat": "C1-43", "booking_status": "CNF" }
+      ],
+      "quota": "GENERAL (GN)",
+      "total_fare": "₹943.60",
+      "distance_km": "252 KM",
+      "gate": "TS --",
+      "route_type": "DIRECT"
+    },
+    "extraction_confidence": 0.98,
+    "tamper_risk_score": 0.0,
+    "tamper_signals": [],
+    "manually_corrected": false,
+    "created_at": "2026-10-23T11:00:00Z",
+    "updated_at": "2026-10-23T11:00:00Z"
+  },
+  {
+    "id": "t-mockup-flight-del-bom",
+    "user_id": "a0000000-0000-0000-0000-000000000001",
+    "file_path": "demo/flight_akasa.pdf",
+    "file_type": "pdf",
+    "transport_mode": "flight",
+    "passenger_name": "TIRTH DIXIT",
+    "passenger_age": 28,
+    "booking_status": "confirmed",
+    "pnr_booking_id": "LYBI4A",
+    "boarding_place": "Delhi (DEL)",
+    "destination_place": "Mumbai (BOM)",
+    "departure_datetime": "2026-01-16T16:00:00Z",
+    "arrival_datetime": "2026-01-16T18:20:00Z",
+    "carrier_name": "Akasa Air (QP-1128)",
+    "seat_class_coach": "Economy — Seats 22A, 22B, 22C",
+    "raw_extraction_json": {
+      "passengers": [
+        { "name": "TIRTH DIXIT", "seat": "22A" },
+        { "name": "AARAV DIXIT", "seat": "22B" },
+        { "name": "ANANYA DIXIT", "seat": "22C" },
+        { "name": "ROHIT DIXIT", "seat": "23A" },
+        { "name": "SNEHA DIXIT", "seat": "23B" }
+      ],
+      "total_fare": "₹55,350.00",
+      "distance_km": "Direct Air Route",
+      "gate": "TS --",
+      "route_type": "DIRECT",
+      "terminal": "3"
+    },
+    "extraction_confidence": 0.98,
+    "tamper_risk_score": 0.0,
+    "tamper_signals": [],
+    "manually_corrected": false,
+    "created_at": "2026-10-23T10:30:00Z",
+    "updated_at": "2026-10-23T10:30:00Z"
+  }
+]

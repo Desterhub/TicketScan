@@ -160,6 +160,20 @@ export async function POST(req: NextRequest) {
       ipAddress,
     });
 
+    // 5. Asynchronously pre-cache origin and destination images (non-blocking)
+    if (extracted.boarding_place || extracted.destination_place) {
+      import('@/lib/location-images').then(({ getOrResolveLocationImage }) => {
+        Promise.all([
+          extracted.boarding_place
+            ? getOrResolveLocationImage(extracted.boarding_place, extracted.transport_mode)
+            : null,
+          extracted.destination_place
+            ? getOrResolveLocationImage(extracted.destination_place, extracted.transport_mode)
+            : null,
+        ]).catch((err) => console.warn('Async location image pre-caching notice:', err));
+      }).catch(() => {});
+    }
+
     return NextResponse.json({
       success: true,
       ticket,
