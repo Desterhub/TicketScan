@@ -527,8 +527,9 @@ export async function generateTicketsExcelWorkbook(
   });
 
   // Adjust widths for analytics sheet
-  for (let c = 1; c <= 14; c++) {
-    wsAnalytics.getColumn(c).width = 18;
+  wsAnalytics.getColumn(1).width = 4;
+  for (let c = 2; c <= 14; c++) {
+    wsAnalytics.getColumn(c).width = 16;
   }
 
   // ==========================================
@@ -556,7 +557,7 @@ export async function generateTicketsExcelWorkbook(
   paxSub.alignment = { vertical: 'middle', horizontal: 'center' };
   wsPassengers.getRow(2).height = 24;
 
-  // Header Columns for Manifest Table (Row 3)
+  // Header Columns for Manifest Table (Row 3) - Shifted Fares Ahead
   const manifestHeaders = [
     '#',
     'PNR / Booking ID',
@@ -566,6 +567,8 @@ export async function generateTicketsExcelWorkbook(
     'Booking Status',
     'Current Status',
     'Coach & Seat',
+    'Individual Split Fare',
+    'Total Ticket Fare',
     'Mode',
     'Carrier / Train / Flight',
     'Origin Station',
@@ -577,8 +580,6 @@ export async function generateTicketsExcelWorkbook(
     'Quota',
     'Distance (KM)',
     'Transaction ID',
-    'Individual Split Fare',
-    'Total Ticket Fare',
     'Integrity Level',
     'AI Confidence',
     'Ticket Reference ID',
@@ -616,6 +617,8 @@ export async function generateTicketsExcelWorkbook(
       p.bookingStatus,
       p.currentStatus,
       p.coachSeat,
+      p.individualFare,
+      p.totalTicketFare,
       p.transportMode,
       p.carrierName,
       p.origin,
@@ -627,8 +630,6 @@ export async function generateTicketsExcelWorkbook(
       p.quota,
       p.distance,
       p.transactionId,
-      p.individualFare,
-      p.totalTicketFare,
       p.riskCategory,
       `${Math.round(p.confidence * 100)}%`,
       p.ticketId,
@@ -649,45 +650,40 @@ export async function generateTicketsExcelWorkbook(
         right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
         left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
       };
-      cell.alignment = { vertical: 'middle' };
+      // Uniform center/middle alignment across all columns
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
     }
 
-    // Centered columns: #, PNR, Age, Gender, Mode, Dates, Times, Quota, Dist, Txn, Integrity, Conf, Ticket ID
-    [1, 2, 4, 5, 9, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24].forEach((colIdx) => {
-      r.getCell(colIdx).alignment = { vertical: 'middle', horizontal: 'center' };
-    });
-
-    // Bold passenger name
+    // Bold passenger name (middle aligned)
     r.getCell(3).font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+    r.getCell(3).alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // Status coloring
+    // Status coloring (middle aligned)
     const statusCell = r.getCell(7); // Current Status
     const statusText = (p.currentStatus || '').toLowerCase();
     if (statusText.includes('cnf') || statusText.includes('confirmed')) {
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
       statusCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF065F46' } };
-      statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
     } else if (statusText.includes('wl') || statusText.includes('wait')) {
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
       statusCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF92400E' } };
-      statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
     } else if (statusText.includes('rac')) {
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
       statusCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0369A1' } };
-      statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
     }
+    statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // Individual Split Fare cell (Column 20)
-    const splitFareCell = r.getCell(20);
+    // Individual Split Fare cell (Column 9 - shifted ahead, bolded, middle aligned)
+    const splitFareCell = r.getCell(9);
     splitFareCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF047857' } };
-    splitFareCell.alignment = { vertical: 'middle', horizontal: 'right' };
+    splitFareCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // Total Ticket Fare cell (Column 21)
-    const totalFareCell = r.getCell(21);
-    totalFareCell.font = { name: 'Segoe UI', size: 10, bold: p.isFirstInTicket, color: { argb: 'FF0F172A' } };
-    totalFareCell.alignment = { vertical: 'middle', horizontal: 'right' };
+    // Total Ticket Fare cell (Column 10 - shifted ahead, bolded, middle aligned)
+    const totalFareCell = r.getCell(10);
+    totalFareCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF0F172A' } };
+    totalFareCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
-    // Risk coloring (Column 22)
+    // Risk coloring (Column 22 - middle aligned)
     const riskCell = r.getCell(22);
     if (p.riskCategory === 'VERIFIED') {
       riskCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECFDF5' } };
@@ -699,6 +695,7 @@ export async function generateTicketsExcelWorkbook(
       riskCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFBEB' } };
       riskCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFD97706' } };
     }
+    riskCell.alignment = { vertical: 'middle', horizontal: 'center' };
   });
 
   // Enable AutoFilter on Manifest
@@ -707,14 +704,48 @@ export async function generateTicketsExcelWorkbook(
     to: { row: 3, column: manifestHeaders.length },
   };
 
-  // Nicely stretch columns with safety padding
+  // Compact, tailored column widths - eliminate excess empty space
+  const manifestColWidths: Record<number, number> = {
+    1: 6,   // # (compact index with filter arrow)
+    2: 15,  // PNR / Booking ID
+    3: 22,  // Passenger Full Name
+    4: 7,   // Age
+    5: 9,   // Gender
+    6: 15,  // Booking Status
+    7: 18,  // Current Status
+    8: 13,  // Coach & Seat
+    9: 17,  // Individual Split Fare (shifted ahead, bold)
+    10: 18, // Total Ticket Fare (shifted ahead, bold)
+    11: 9,  // Mode
+    12: 22, // Carrier / Train / Flight
+    13: 18, // Origin Station
+    14: 18, // Destination Station
+    15: 13, // Departure Date
+    16: 11, // Departure Time
+    17: 13, // Arrival Date
+    18: 11, // Arrival Time
+    19: 12, // Quota
+    20: 12, // Distance (KM)
+    21: 17, // Transaction ID
+    22: 13, // Integrity Level
+    23: 12, // AI Confidence
+    24: 16, // Ticket Reference ID
+  };
+
   wsPassengers.columns.forEach((column, i) => {
-    let maxLen = manifestHeaders[i] ? manifestHeaders[i].length : 12;
+    const colIdx = i + 1;
+    const defaultWidth = manifestColWidths[colIdx] || 14;
+    let maxLen = 0;
     column.eachCell?.({ includeEmpty: false }, (cell) => {
       const v = cell.value ? String(cell.value) : '';
       if (v.length > maxLen) maxLen = v.length;
     });
-    column.width = Math.max(14, Math.min(48, maxLen + 6));
+    // For column 1 (#), keep strictly compact at width 6
+    if (colIdx === 1) {
+      column.width = 6;
+    } else {
+      column.width = Math.max(defaultWidth, Math.min(defaultWidth + 6, maxLen + 2));
+    }
   });
 
   // ==========================================
@@ -822,14 +853,11 @@ export async function generateTicketsExcelWorkbook(
         right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
         left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
       };
-      cell.alignment = { vertical: 'middle' };
+      // Uniform center/middle alignment across all ticket columns
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
     }
 
-    [1, 3, 4, 7, 12, 13, 14, 15, 16, 17].forEach((colIdx) => {
-      r.getCell(colIdx).alignment = { vertical: 'middle', horizontal: 'center' };
-    });
-
-    // Rating color
+    // Rating color (middle aligned)
     const rateCell = r.getCell(14);
     if (rScore < 0.3) {
       rateCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFECFDF5' } };
@@ -841,6 +869,7 @@ export async function generateTicketsExcelWorkbook(
       rateCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
       rateCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFDC2626' } };
     }
+    rateCell.alignment = { vertical: 'middle', horizontal: 'center' };
   });
 
   wsTickets.autoFilter = {
@@ -848,13 +877,41 @@ export async function generateTicketsExcelWorkbook(
     to: { row: 3, column: ticketHeaders.length },
   };
 
+  // Compact, tailored column widths for tickets register
+  const ticketColWidths: Record<number, number> = {
+    1: 6,   // # (compact index with filter arrow)
+    2: 15,  // Ticket ID
+    3: 15,  // PNR / Booking ID
+    4: 11,  // Transport Mode
+    5: 22,  // Primary Passenger
+    6: 20,  // Carrier Name
+    7: 14,  // Booking Status
+    8: 18,  // Boarding Place
+    9: 18,  // Destination Place
+    10: 18, // Departure Date/Time
+    11: 14, // Seat / Coach Details
+    12: 12, // AI Confidence
+    13: 13, // Tamper Risk Score
+    14: 15, // Forensic Rating
+    15: 12, // Tamper Signals Count
+    16: 12, // Manually Corrected
+    17: 10, // File Type
+    18: 16, // Upload Timestamp
+  };
+
   wsTickets.columns.forEach((column, i) => {
-    let maxLen = ticketHeaders[i] ? ticketHeaders[i].length : 12;
+    const colIdx = i + 1;
+    const defaultWidth = ticketColWidths[colIdx] || 14;
+    let maxLen = 0;
     column.eachCell?.({ includeEmpty: false }, (cell) => {
       const v = cell.value ? String(cell.value) : '';
       if (v.length > maxLen) maxLen = v.length;
     });
-    column.width = Math.max(14, Math.min(48, maxLen + 6));
+    if (colIdx === 1) {
+      column.width = 6;
+    } else {
+      column.width = Math.max(defaultWidth, Math.min(defaultWidth + 6, maxLen + 2));
+    }
   });
 
   // Write buffer
@@ -923,12 +980,9 @@ export async function generateUsersExcelWorkbook(users: any[], generatedBy: stri
       cell.font = { name: 'Segoe UI', size: 10 };
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: zebra } };
       cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
-      cell.alignment = { vertical: 'middle' };
+      // Uniform center/middle alignment across all columns
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
     }
-
-    r.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
-    r.getCell(5).alignment = { vertical: 'middle', horizontal: 'center' };
-    r.getCell(6).alignment = { vertical: 'middle', horizontal: 'center' };
 
     const statusCell = r.getCell(6);
     if (u.is_active) {
@@ -938,17 +992,35 @@ export async function generateUsersExcelWorkbook(users: any[], generatedBy: stri
       statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
       statusCell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFDC2626' } };
     }
+    statusCell.alignment = { vertical: 'middle', horizontal: 'center' };
   });
 
   ws.autoFilter = { from: { row: 3, column: 1 }, to: { row: 3, column: headers.length } };
 
+  // Compact, tailored column widths for users directory
+  const userColWidths: Record<number, number> = {
+    1: 6,   // # (compact index with filter arrow)
+    2: 15,  // User ID
+    3: 24,  // Email Address
+    4: 20,  // Full Name
+    5: 12,  // Role Permission
+    6: 13,  // Account Status
+    7: 16,  // Registered Date
+  };
+
   ws.columns.forEach((col, i) => {
-    let max = headers[i] ? headers[i].length : 12;
+    const colIdx = i + 1;
+    const defaultWidth = userColWidths[colIdx] || 14;
+    let max = 0;
     col.eachCell?.({ includeEmpty: false }, (cell) => {
       const s = cell.value ? String(cell.value) : '';
       if (s.length > max) max = s.length;
     });
-    col.width = Math.max(14, Math.min(48, max + 6));
+    if (colIdx === 1) {
+      col.width = 6;
+    } else {
+      col.width = Math.max(defaultWidth, Math.min(defaultWidth + 6, max + 2));
+    }
   });
 
   const arrayBuffer = await workbook.xlsx.writeBuffer();
