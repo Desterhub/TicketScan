@@ -12,10 +12,12 @@ import {
   AlertOctagon,
   MapPin,
   Users,
+  User,
   Armchair,
   Sparkles,
   Wallet,
   Compass,
+  Link2,
   FileText,
   ExternalLink,
   Edit2,
@@ -23,6 +25,7 @@ import {
   Ticket as TicketIcon,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
 } from 'lucide-react';
 import { Ticket, TransportMode, BookingStatus, TamperSignal } from '@/types/database';
 import {
@@ -322,12 +325,12 @@ export function TicketCard({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          2. ORIGIN / DESTINATION SPLIT PHOTO BANNER (~165-175px tall)
+          2. ORIGIN / DESTINATION SPLIT PHOTO BANNER (Side-by-side against each other)
          ═══════════════════════════════════════════════════════════════════ */}
       <div className="relative w-full rounded-2xl overflow-hidden border border-slate-800/80 bg-slate-950 shadow-inner">
-        <div className="grid grid-cols-1 sm:grid-cols-2 relative min-h-[165px] sm:min-h-[175px]">
+        <div className="grid grid-cols-2 relative min-h-[160px] sm:min-h-[175px]">
           {/* Origin Panel (Left) */}
-          <div className="relative min-h-[130px] sm:min-h-[175px] overflow-hidden group/origin border-b sm:border-b-0 sm:border-r border-slate-800/80">
+          <div className="relative min-h-[160px] sm:min-h-[175px] overflow-hidden group/origin border-r border-slate-800/80">
             {/* Location Photo */}
             <img
               src={originImage}
@@ -340,7 +343,7 @@ export function TicketCard({
             />
             {!originLoaded && (
               <div className="absolute inset-0 bg-slate-900 animate-pulse flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-slate-700 animate-bounce" />
+                <MapPin className="w-5 h-5 text-slate-700 animate-bounce" />
               </div>
             )}
 
@@ -348,22 +351,17 @@ export function TicketCard({
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/20" />
 
             {/* Origin Content Overlay */}
-            <div className="relative z-10 p-4 sm:p-5 flex flex-col justify-between h-full">
-              <div className="flex items-center justify-between">
-                <div className="inline-flex items-center gap-1.5 text-amber-400 text-[11px] font-mono font-bold tracking-widest uppercase">
-                  <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>ORIGIN</span>
-                </div>
-                <span className="text-[8px] font-mono uppercase px-1.5 py-0.5 rounded bg-black/40 text-slate-400 backdrop-blur-sm">
-                  AI-generated
-                </span>
+            <div className="relative z-10 p-3 sm:p-5 flex flex-col justify-between h-full">
+              <div className="inline-flex items-center gap-1.5 text-amber-400 text-[10px] sm:text-[11px] font-mono font-bold tracking-widest uppercase">
+                <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>ORIGIN</span>
               </div>
 
               <div className="pt-3 sm:pt-4">
-                <div className="text-lg sm:text-xl font-extrabold text-white tracking-tight drop-shadow-md truncate">
+                <div className="text-xs sm:text-base md:text-lg font-extrabold text-white tracking-tight drop-shadow-md truncate">
                   {ticket.boarding_place || 'Origin TBD'}
                 </div>
-                <div className="text-xs font-mono text-slate-300/90 pt-0.5 truncate">
+                <div className="text-[10px] sm:text-xs font-mono text-slate-300/90 pt-0.5 truncate">
                   {formatDate(ticket.departure_datetime)} • {formatTime(ticket.departure_datetime)}
                 </div>
               </div>
@@ -371,25 +369,25 @@ export function TicketCard({
           </div>
 
           {/* Center Route Connector */}
-          <div className="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex-col items-center justify-center pointer-events-none">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-slate-700/80 backdrop-blur-md shadow-xl text-slate-300">
-              <div className="w-4 h-0.5 border-t border-dashed border-slate-500" />
-              {getTransportIcon(ticket.transport_mode, 'w-4 h-4 text-slate-200')}
-              <div className="w-4 h-0.5 border-t border-dashed border-slate-500" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-slate-950/85 border border-slate-700/80 backdrop-blur-md shadow-xl text-slate-300">
+              <div className="w-2.5 sm:w-4 h-0.5 border-t border-dashed border-slate-500" />
+              {getTransportIcon(ticket.transport_mode, 'w-3.5 h-3.5 text-slate-200')}
+              <div className="w-2.5 sm:w-4 h-0.5 border-t border-dashed border-slate-500" />
             </div>
-            <div className="mt-1 flex flex-col items-center">
-              <span className="text-[9px] font-mono tracking-widest uppercase text-slate-400 font-bold">
+            <div className="mt-0.5 sm:mt-1 flex flex-col items-center">
+              <span className="text-[8px] sm:text-[9px] font-mono tracking-widest uppercase text-slate-400 font-bold">
                 {meta.route_type || 'DIRECT'}
               </span>
               <div className="flex items-center gap-1 mt-0.5">
-                <div className="w-6 h-0.5 bg-slate-600 rounded-full" />
+                <div className="w-4 sm:w-6 h-0.5 bg-slate-600 rounded-full" />
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
               </div>
             </div>
           </div>
 
           {/* Destination Panel (Right) */}
-          <div className="relative min-h-[130px] sm:min-h-[175px] overflow-hidden group/dest text-left sm:text-right">
+          <div className="relative min-h-[160px] sm:min-h-[175px] overflow-hidden group/dest text-right">
             {/* Location Photo */}
             <img
               src={destImage}
@@ -402,7 +400,7 @@ export function TicketCard({
             />
             {!destLoaded && (
               <div className="absolute inset-0 bg-slate-900 animate-pulse flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-slate-700 animate-bounce" />
+                <MapPin className="w-5 h-5 text-slate-700 animate-bounce" />
               </div>
             )}
 
@@ -410,22 +408,17 @@ export function TicketCard({
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/20" />
 
             {/* Destination Content Overlay */}
-            <div className="relative z-10 p-4 sm:p-5 flex flex-col justify-between h-full">
-              <div className="flex items-center justify-between sm:justify-end gap-2">
-                <span className="sm:hidden text-[8px] font-mono uppercase px-1.5 py-0.5 rounded bg-black/40 text-slate-400 backdrop-blur-sm">
-                  AI-generated
-                </span>
-                <div className="inline-flex items-center gap-1.5 text-sky-400 text-[11px] font-mono font-bold tracking-widest uppercase">
-                  <MapPin className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                  <span>DESTINATION</span>
-                </div>
+            <div className="relative z-10 p-3 sm:p-5 flex flex-col justify-between h-full">
+              <div className="inline-flex items-center justify-end gap-1.5 text-sky-400 text-[10px] sm:text-[11px] font-mono font-bold tracking-widest uppercase">
+                <MapPin className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                <span>DESTINATION</span>
               </div>
 
               <div className="pt-3 sm:pt-4">
-                <div className="text-lg sm:text-xl font-extrabold text-white tracking-tight drop-shadow-md truncate">
+                <div className="text-xs sm:text-base md:text-lg font-extrabold text-white tracking-tight drop-shadow-md truncate">
                   {ticket.destination_place || 'Destination TBD'}
                 </div>
-                <div className="text-xs font-mono text-slate-300/90 pt-0.5 truncate">
+                <div className="text-[10px] sm:text-xs font-mono text-slate-300/90 pt-0.5 truncate">
                   {formatDate(ticket.arrival_datetime)} • {formatTime(ticket.arrival_datetime)}
                 </div>
               </div>
@@ -435,23 +428,28 @@ export function TicketCard({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
-          3. INFO CHIP GRID (Icon-led cards, Passengers, Seat, AI confidence, Fare, Distance)
+          3. INFO CHIP GRID (Icon-led cards matching mockups)
          ═══════════════════════════════════════════════════════════════════ */}
-      <div className="space-y-2.5">
-        {/* Row 1: Passengers & Seat / Coach */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      <div className="space-y-2 sm:space-y-2.5">
+        {/* Row 1: Passengers & Seat / Coach (Always 2 chips side-by-side) */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
           {/* Passengers Chip */}
-          <div className="p-3.5 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-2 shadow-sm">
-            <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-              <Users className="w-4 h-4 text-sky-400 shrink-0" />
-              <span>Passengers ({paxList.length > 0 ? paxList.length : 1})</span>
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1.5 sm:space-y-2 shadow-sm min-w-0">
+            <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider truncate">
+              <Users className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span className="truncate">PASSENGERS ({paxList.length > 0 ? paxList.length : 1})</span>
             </div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-bold text-white tracking-tight truncate">
-                {leadPax}
-              </span>
+            <div className="flex items-center justify-between gap-1.5 min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0 truncate">
+                <div className="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                  <User className="w-3 h-3 text-slate-300" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-white tracking-tight truncate">
+                  {leadPax}
+                </span>
+              </div>
               {otherPaxCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 shrink-0">
+                <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 shrink-0">
                   +{otherPaxCount} more
                 </span>
               )}
@@ -459,85 +457,132 @@ export function TicketCard({
           </div>
 
           {/* Seat / Coach Chip */}
-          <div className="p-3.5 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-2 shadow-sm">
-            <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-              <Armchair className="w-4 h-4 text-sky-400 shrink-0" />
-              <span>Seat / Coach</span>
+          <div className="p-3 sm:p-3.5 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1.5 sm:space-y-2 shadow-sm min-w-0">
+            <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider truncate">
+              <Armchair className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span className="truncate">SEAT / COACH</span>
             </div>
-            <div className="text-sm font-bold text-amber-400 font-mono tracking-tight truncate">
-              {ticket.seat_class_coach ||
-                (ticket.transport_mode === 'flight'
-                  ? 'Economy'
-                  : ticket.transport_mode === 'bus'
-                  ? 'Window / Pushback'
-                  : 'Chair Car (CC)')}
+            <div className="flex items-center justify-between gap-1 min-w-0">
+              <span className="text-xs sm:text-sm font-bold text-amber-400 font-mono tracking-tight truncate">
+                {ticket.seat_class_coach ||
+                  (ticket.transport_mode === 'flight'
+                    ? 'Economy'
+                    : ticket.transport_mode === 'bus'
+                    ? 'Window / Pushback'
+                    : 'Chair Car (CC)')}
+              </span>
+              <ChevronRight className="w-4 h-4 text-slate-500 shrink-0 hidden sm:block" />
             </div>
           </div>
         </div>
 
-        {/* Row 2: AI Confidence + Quota (train) + Fare + Distance */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {/* AI Confidence Chip with glowing progress bar */}
-          <div className="p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1.5 shadow-sm col-span-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-              <span>AI CONFIDENCE</span>
-            </div>
-            <div className="space-y-1">
-              <div className="text-base font-bold text-white font-mono">{confidencePercent}%</div>
-              {/* Thin glowing progress bar matching mockup */}
-              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-sky-400 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.5)] transition-all duration-1000 ease-out"
-                  style={{ width: `${confidencePercent}%` }}
-                />
+        {/* Row 2: Dynamic chips based on presence of Quota (train vs flight/bus) */}
+        {meta.quota ? (
+          <>
+            {/* Train Layout: 3 chips in Row 2 (AI Confidence, Quota, Fare) */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+              {/* AI Confidence Chip with glowing progress bar */}
+              <div className="p-2.5 sm:p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1 sm:space-y-1.5 shadow-sm min-w-0">
+                <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider truncate">
+                  <Sparkles className="w-3 h-3 text-sky-400 shrink-0" />
+                  <span className="truncate">AI CONFIDENCE</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm sm:text-base font-bold text-white font-mono">{confidencePercent}%</div>
+                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-sky-400 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.5)] transition-all duration-1000 ease-out"
+                      style={{ width: `${confidencePercent}%` }}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Quota Chip (trains or if present) */}
-          {meta.quota ? (
-            <div className="p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1.5 shadow-sm col-span-1">
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                <FileText className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                <span>Quota</span>
+              {/* Quota Chip */}
+              <div className="p-2.5 sm:p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1 sm:space-y-1.5 shadow-sm min-w-0">
+                <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider truncate">
+                  <FileText className="w-3 h-3 text-sky-400 shrink-0" />
+                  <span className="truncate">Quota</span>
+                </div>
+                <div className="truncate">
+                  <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 text-white border border-slate-700/80 text-[10px] sm:text-xs font-mono font-bold tracking-tight inline-block truncate max-w-full">
+                    {meta.quota}
+                  </span>
+                </div>
               </div>
-              <div className="truncate">
-                <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 text-white border border-slate-700/80 text-xs font-mono font-bold tracking-tight inline-block truncate max-w-full">
-                  {meta.quota}
+
+              {/* Fare Chip */}
+              <div className="p-2.5 sm:p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1 sm:space-y-1.5 shadow-sm min-w-0">
+                <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider truncate">
+                  <Wallet className="w-3 h-3 text-sky-400 shrink-0" />
+                  <span className="truncate">Fare</span>
+                </div>
+                <div className="truncate">
+                  <span className="px-2 py-1 rounded-xl bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 text-[11px] sm:text-xs font-mono font-black tracking-tight inline-block truncate">
+                    {meta.total_fare || '₹943.60'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 3 (Train): Distance Chip */}
+            <div className="flex">
+              <div className="p-2 sm:p-2.5 px-3 sm:px-4 rounded-2xl bg-[#111927] border border-slate-800/80 inline-flex items-center gap-2.5 shadow-sm">
+                <Link2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Distance</span>
+                <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 text-slate-200 border border-slate-700/80 text-xs font-mono font-bold">
+                  {meta.distance_km || '252 KM'}
                 </span>
               </div>
             </div>
-          ) : null}
-
-          {/* Fare Chip */}
-          <div className="p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1.5 shadow-sm col-span-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-              <Wallet className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-              <span>Fare</span>
+          </>
+        ) : (
+          /* Flight / Bus Layout: 3 chips in Row 2 (AI Confidence, Fare, Distance) */
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+            {/* AI Confidence Chip with glowing progress bar */}
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1 sm:space-y-1.5 shadow-sm min-w-0">
+              <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider truncate">
+                <Sparkles className="w-3 h-3 text-sky-400 shrink-0" />
+                <span className="truncate">AI CONFIDENCE</span>
+              </div>
+              <div className="space-y-1">
+                <div className="text-sm sm:text-base font-bold text-white font-mono">{confidencePercent}%</div>
+                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-500 to-sky-400 rounded-full shadow-[0_0_8px_rgba(56,189,248,0.5)] transition-all duration-1000 ease-out"
+                    style={{ width: `${confidencePercent}%` }}
+                  />
+                </div>
+              </div>
             </div>
-            <div className="truncate">
-              <span className="px-2.5 py-1 rounded-xl bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-black tracking-tight inline-block truncate">
-                {meta.total_fare ||
-                  (ticket.transport_mode === 'flight' ? '₹55,350.00' : '₹943.60')}
-              </span>
+
+            {/* Fare Chip */}
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1 sm:space-y-1.5 shadow-sm min-w-0">
+              <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider truncate">
+                <Wallet className="w-3 h-3 text-sky-400 shrink-0" />
+                <span className="truncate">Fare</span>
+              </div>
+              <div className="truncate">
+                <span className="px-2 py-1 rounded-xl bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 text-[11px] sm:text-xs font-mono font-black tracking-tight inline-block truncate">
+                  {meta.total_fare || '₹55,350.00'}
+                </span>
+              </div>
+            </div>
+
+            {/* Distance Chip */}
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1 sm:space-y-1.5 shadow-sm min-w-0">
+              <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-mono text-slate-400 uppercase tracking-wider truncate">
+                <Compass className="w-3 h-3 text-sky-400 shrink-0" />
+                <span className="truncate">Distance</span>
+              </div>
+              <div className="truncate">
+                <span className="px-2 py-0.5 rounded-lg bg-slate-800/80 text-slate-200 border border-slate-700/80 text-[10px] sm:text-xs font-mono font-semibold tracking-tight inline-block truncate max-w-full">
+                  {meta.distance_km || 'Direct Air Route'}
+                </span>
+              </div>
             </div>
           </div>
-
-          {/* Distance Chip */}
-          <div className="p-3 rounded-2xl bg-[#111927] border border-slate-800/80 flex flex-col justify-between space-y-1.5 shadow-sm col-span-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-              <Compass className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-              <span>Distance</span>
-            </div>
-            <div className="truncate">
-              <span className="px-2.5 py-1 rounded-xl bg-slate-800/80 text-slate-200 border border-slate-700/80 text-xs font-mono font-semibold tracking-tight inline-block truncate max-w-full">
-                {meta.distance_km ||
-                  (ticket.transport_mode === 'flight' ? 'Direct Air Route' : '252 KM')}
-              </span>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
