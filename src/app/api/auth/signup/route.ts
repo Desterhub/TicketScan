@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getServiceRoleClient } from '@/lib/db';
 import { hashPassword, logAuditEvent } from '@/lib/auth';
 import { signSessionToken, getSessionCookieOptions } from '@/lib/session';
+import { sendWelcomeEmail } from '@/lib/email';
 
 const signupSchema = z.object({
   fullName: z.string().min(2, 'Passenger name must be at least 2 characters'),
@@ -112,6 +113,20 @@ export async function POST(req: NextRequest) {
       email: newUser.email,
       role: newUser.role,
       fullName: newUser.full_name,
+    });
+
+    // Send Thank-You / Welcome Email directly to the registered email
+    const appUrl =
+      req.headers.get('origin') ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      'https://ticketscan-xndj.onrender.com';
+
+    sendWelcomeEmail({
+      to: normalizedEmail,
+      fullName: cleanName,
+      appUrl,
+    }).catch((err) => {
+      console.warn('Welcome email background send notice:', err);
     });
 
     const cookieOptions = getSessionCookieOptions(newUser.role);
