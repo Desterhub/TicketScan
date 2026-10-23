@@ -53,7 +53,12 @@ export function TicketInsuranceCard({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm tracking-wider text-white">TIXSURANCE™ SHIELD</span>
+              <span className="font-black text-sm tracking-wider">
+                <span className="text-cyan-400">TIX</span>
+                <span className="text-white">SURANCE</span>
+                <span className="text-cyan-300 text-[10px] ml-0.5 font-bold">™</span>{' '}
+                <span className="text-white font-extrabold">SHIELD</span>
+              </span>
               <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
                 ZERO-FRAUD
               </span>

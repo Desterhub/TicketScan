@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense, useRef } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
   ShieldCheck,
@@ -22,8 +23,31 @@ import {
   Menu,
   ChevronRight,
   ChevronLeft,
+  LayoutDashboard,
+  Home,
 } from 'lucide-react';
 import { evaluateGeofenceRadius, calculatePremiums, TIXSURANCE_HUB, DEFAULT_EVENT_VENUE } from '@/lib/tixsurance';
+
+// Uniform TIXSURANCE Brand Logo component with distinct highlighted colors
+export function TixsuranceBrandLogo({
+  tixColor = 'text-cyan-400',
+  suranceColor = 'text-white',
+  className = 'text-base sm:text-lg',
+  showTrademark = true,
+}: {
+  tixColor?: string;
+  suranceColor?: string;
+  className?: string;
+  showTrademark?: boolean;
+}) {
+  return (
+    <span className={`font-black tracking-wider inline-flex items-center select-none ${className}`}>
+      <span className={tixColor}>TIX</span>
+      <span className={suranceColor}>SURANCE</span>
+      {showTrademark && <span className="text-[10px] text-cyan-300 font-bold ml-0.5 align-super">™</span>}
+    </span>
+  );
+}
 
 // Navigation configuration for the Slidebar
 const SCREENS = [
@@ -372,57 +396,60 @@ function TixsuranceContent() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 pb-20">
       {/* Top Banner Navigation & Screen Switcher */}
-      <div className="bg-slate-950 border-b border-slate-800 sticky top-0 z-40 px-4 py-3 shadow-md">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <ShieldCheck className="w-6 h-6 text-white" />
+      <div className="bg-slate-950 border-b border-slate-800 sticky top-0 z-40 px-3 sm:px-4 py-2.5 sm:py-3 shadow-md">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
+          {/* Left: Tixsurance Branding with distinct colors */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg tracking-wider text-white">TIXSURANCE™</span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <TixsuranceBrandLogo className="text-base sm:text-lg" />
+                <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
                   EVENT &amp; TRAVEL SHIELD
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Zero-Fraud Event Ticket, Stay &amp; Travel Protection Ecosystem</p>
+              <p className="text-[10px] sm:text-xs text-slate-400 truncate hidden md:block">
+                Zero-Fraud Event Ticket, Stay &amp; Travel Protection Ecosystem
+              </p>
             </div>
           </div>
 
-          {/* Slidebar Trigger Button (Replaces cluttered horizontal overflow tabs) */}
-          <div className="flex items-center gap-2">
+          {/* Right: Slidebar Trigger Button (EXACTLY NEXT TO TIXSURANCE ON SAME ROW!) */}
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setSlidebarOpen(true)}
-              className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-blue-500/50 text-slate-200 transition-all shadow-sm group active:scale-[0.98]"
+              className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-400/50 text-slate-200 transition-all shadow-sm group active:scale-[0.98]"
               title="Open Navigation Slidebar"
               aria-label="Open Navigation Slidebar"
             >
-              <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <Menu className="w-4 h-4" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-cyan-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div className="text-left">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <span>Navigation</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                 </div>
                 <div className="text-xs font-bold text-white whitespace-nowrap">
                   {SCREENS.find((s) => s.id === activeScreen)?.title || '1 - Ticket Protection'}
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-transform ml-1 hidden sm:block" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-transform ml-0.5 hidden sm:block" />
             </button>
-          </div>
 
-          {/* Inquiry Helpline Phone Badge - +91 90042 64161 */}
-          <a
-            href="tel:+919004264161"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/80 border border-blue-500/40 text-blue-200 text-xs font-mono hover:bg-blue-900/60 transition-colors"
-          >
-            <Phone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-            <span className="hidden sm:inline">Inquiries: </span>
-            <strong className="text-white">+91 90042 64161</strong>
-          </a>
+            {/* Inquiry Helpline Phone Badge - Desktop */}
+            <a
+              href="tel:+919004264161"
+              className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/80 border border-blue-500/40 text-blue-200 text-xs font-mono hover:bg-blue-900/60 transition-colors whitespace-nowrap"
+            >
+              <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span className="text-slate-300">Inquiries:</span>
+              <strong className="text-white whitespace-nowrap font-bold font-mono">+91 90042 64161</strong>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -455,9 +482,9 @@ function TixsuranceContent() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-base tracking-wider text-white">TIXSURANCE™</span>
+                <TixsuranceBrandLogo className="text-base" />
                 <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  SLIDEBAR
+                  PORTAL
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">Navigation &amp; Claims Hub</p>
@@ -471,6 +498,28 @@ function TixsuranceContent() {
           >
             <X className="w-4 h-4" />
           </button>
+        </div>
+
+        {/* Prominent Return to TicketScan Dashboard Option */}
+        <div className="p-4 pb-0">
+          <Link
+            href="/dashboard"
+            onClick={() => setSlidebarOpen(false)}
+            className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-blue-950/80 via-slate-900 to-indigo-950/70 border border-blue-500/40 hover:border-cyan-400 text-white transition-all shadow-md group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/50 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
+                <LayoutDashboard className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>Back to TicketScan Dashboard</span>
+                </div>
+                <div className="text-[10px] text-slate-400">Return to ticket management &amp; scans</div>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform shrink-0" />
+          </Link>
         </div>
 
         {/* Drawer Scrollable Content */}
@@ -597,19 +646,28 @@ function TixsuranceContent() {
         </div>
 
         {/* Drawer Footer with Inquiries helpline & close button */}
-        <div className="p-4 border-t border-slate-800/90 bg-slate-900/80 space-y-3">
+        <div className="p-4 border-t border-slate-800/90 bg-slate-900/80 space-y-2.5">
           <a
             href="tel:+919004264161"
             className="flex items-center gap-3 p-3 rounded-xl bg-blue-950/60 border border-blue-500/40 hover:bg-blue-900/50 transition-colors text-left"
           >
-            <div className="w-8 h-8 rounded-lg bg-blue-600/30 flex items-center justify-center text-blue-400 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-blue-600/30 flex items-center justify-center text-cyan-400 shrink-0">
               <Phone className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <div className="text-[10px] font-semibold text-blue-300 uppercase tracking-wider">Helpline &amp; Inquiries</div>
-              <div className="text-xs font-bold text-white font-mono">+91 90042 64161</div>
+              <div className="text-xs font-bold text-white font-mono whitespace-nowrap">+91 90042 64161</div>
             </div>
           </a>
+
+          <Link
+            href="/"
+            onClick={() => setSlidebarOpen(false)}
+            className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 border border-slate-800"
+          >
+            <Home className="w-3.5 h-3.5 text-slate-400" />
+            <span>TicketScan Home</span>
+          </Link>
 
           <button
             type="button"
@@ -673,9 +731,11 @@ function TixsuranceContent() {
             <div className="bg-[#10385C] text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-blue-950">
               <div>
                 <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-blue-300" />
+                  <ShieldCheck className="w-5 h-5 text-cyan-400" />
                   <h1 className="font-extrabold text-base md:text-lg tracking-wider">
-                    TIXSURANCE - TICKET PROTECTION
+                    <span className="text-cyan-400 font-black">TIX</span>
+                    <span className="text-white font-extrabold">SURANCE</span>
+                    <span className="text-blue-100 font-medium"> - TICKET PROTECTION</span>
                   </h1>
                 </div>
                 <p className="text-xs text-blue-100/90 mt-0.5">Secure your Tickets now by filling this form</p>
@@ -903,9 +963,11 @@ function TixsuranceContent() {
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-300 overflow-hidden text-slate-800 font-sans">
             <div className="bg-[#10385C] text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-blue-950">
               <div className="flex items-center gap-2">
-                <Hotel className="w-5 h-5 text-blue-300" />
+                <Hotel className="w-5 h-5 text-cyan-400" />
                 <h1 className="font-extrabold text-base md:text-lg tracking-wider">
-                  TIXSURANCE - ACCOMMODATION SHIELD
+                  <span className="text-cyan-400 font-black">TIX</span>
+                  <span className="text-white font-extrabold">SURANCE</span>
+                  <span className="text-blue-100 font-medium"> - ACCOMMODATION SHIELD</span>
                 </h1>
               </div>
               <span className="text-xs font-bold uppercase px-2.5 py-1 bg-white/10 rounded">
@@ -1050,9 +1112,11 @@ function TixsuranceContent() {
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-300 overflow-hidden text-slate-800 font-sans">
             <div className="bg-[#10385C] text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-blue-950">
               <div className="flex items-center gap-2">
-                <Plane className="w-5 h-5 text-blue-300" />
+                <Plane className="w-5 h-5 text-cyan-400" />
                 <h1 className="font-extrabold text-base md:text-lg tracking-wider">
-                  TIXSURANCE - TRAVEL SHIELD
+                  <span className="text-cyan-400 font-black">TIX</span>
+                  <span className="text-white font-extrabold">SURANCE</span>
+                  <span className="text-blue-100 font-medium"> - TRAVEL SHIELD</span>
                 </h1>
               </div>
               <span className="text-xs font-bold uppercase px-2.5 py-1 bg-white/10 rounded">
@@ -1200,7 +1264,9 @@ function TixsuranceContent() {
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-5 h-5 text-amber-400" />
                   <h1 className="font-extrabold text-base md:text-lg tracking-wider">
-                    TIXSURANCE - FILE YOUR CLAIM
+                    <span className="text-cyan-400 font-black">TIX</span>
+                    <span className="text-white font-extrabold">SURANCE</span>
+                    <span className="text-blue-100 font-medium"> - FILE YOUR CLAIM</span>
                   </h1>
                 </div>
                 <p className="text-xs text-blue-100/90 mt-0.5">Local Policyholder Corridor (≤100km Radius)</p>
@@ -1266,63 +1332,106 @@ function TixsuranceContent() {
                   </div>
                 </div>
 
-                {/* Initiation of the Return of Bands (Exact Canva Box & Address) */}
-                <div className="border-2 border-amber-300 bg-amber-50/70 rounded-xl p-4 text-slate-800 space-y-3">
+                {/* Clean, Structured Step 2: Wristband Return (Empressa 14 Hub) */}
+                <div className="border border-amber-300 bg-amber-50/60 rounded-xl p-4 text-slate-800 space-y-3">
                   <div className="flex items-start gap-2.5">
-                    <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-bold text-xs uppercase tracking-wide text-amber-950">
-                        Initiation of the Return of Bands (Mandatory Anti-Freeloading Safeguard)
-                      </h3>
-                      <p className="text-[11px] text-amber-900 mt-0.5 leading-relaxed">
-                        To eliminate freeloading and fraud, your payout is <strong>HELD</strong> until we physically
-                        receive and scan your uncut wristband. The Bands/Tickets should reach the designated address
-                        within <strong>12 hours</strong> of filing the claim.
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-800 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-bold text-xs uppercase tracking-wide text-amber-950">
+                          Step 2: Return Physical Wristband
+                        </h3>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200/80 text-amber-900">
+                          12-Hour Hub Window
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 mt-1">
+                        Your reimbursement is released as soon as our hub receives and scans your uncut wristband.
                       </p>
                     </div>
                   </div>
 
-                  {/* Hub Address Card */}
-                  <div className="bg-white border border-amber-200 rounded-lg p-3 text-xs space-y-1 shadow-sm">
-                    <div className="font-bold text-slate-900">Please send your Wristbands/Tickets to the address mentioned below:</div>
-                    <div className="text-slate-700 leading-snug">{TIXSURANCE_HUB.address}</div>
-                    <div className="pt-2 text-slate-600 border-t border-slate-100 flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Please Coordinate with the below number for courier purposes &amp; any inquiries: </span>
-                      <strong className="text-slate-900">+91 90042 64161</strong>
+                  {/* Hub Address & Courier Coordination Card */}
+                  <div className="bg-white border border-amber-200 rounded-xl p-3.5 text-xs space-y-3 shadow-sm">
+                    <div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                        Courier / Drop-off Delivery Address:
+                      </div>
+                      <div className="flex items-start gap-2 text-slate-800">
+                        <MapPin className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-slate-900 font-bold block">{TIXSURANCE_HUB.name}</strong>
+                          <span className="text-slate-700 leading-relaxed">{TIXSURANCE_HUB.address}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dedicated Helpline Callout - NEVER WRAPS INTO 3 LINES! */}
+                    <div className="pt-2.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 -mx-3.5 -mb-3.5 p-3 rounded-b-xl">
+                      <div className="flex items-center gap-2 text-slate-700 text-xs">
+                        <Phone className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span>Courier Coordination &amp; Inquiries:</span>
+                      </div>
+                      <a
+                        href="tel:+919004264161"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-blue-400/50 text-blue-700 font-mono font-bold text-sm shadow-sm hover:bg-blue-50 transition-colors whitespace-nowrap self-start sm:self-auto"
+                      >
+                        <span className="text-xs">📞</span>
+                        <span className="whitespace-nowrap tracking-wider">+91 90042 64161</span>
+                      </a>
                     </div>
                   </div>
                 </div>
 
-                {/* Proof of Bands: Packaging Video Upload (Canva Step 1, 2, 3) */}
+                {/* Clean, Structured Step 3: Packaging Video Proof */}
                 <div className="border border-slate-300 rounded-xl p-4 bg-slate-50 space-y-3">
-                  <div className="flex items-center gap-2 text-slate-900 font-bold text-xs uppercase tracking-wide">
-                    <Camera className="w-4 h-4 text-blue-600" />
-                    Proof of Bands (Continuous Packaging Video)
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-slate-900 font-bold text-xs uppercase tracking-wide">
+                      <Camera className="w-4 h-4 text-blue-600" />
+                      Step 3: Continuous Packaging Video
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+                      Unedited
+                    </span>
                   </div>
 
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
-                    Please upload a single, unedited video matching the following steps before handing the package to the courier:
+                  <p className="text-xs text-slate-600 leading-normal">
+                    Record one continuous, unedited video before handing the package to the courier:
                   </p>
 
-                  <div className="bg-white border border-slate-200 rounded-lg p-3 text-xs space-y-2 text-slate-700">
-                    <div>
-                      <strong>1. Show the Band Close-up:</strong> Clearly show the entire wristband on camera to prove the
-                      fabric is uncut, the plastic barrel-lock is un-tampered, and the QR code is fully legible.
+                  {/* 3 Simple Visual Steps */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="bg-white border border-slate-200 rounded-lg p-2.5 text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-blue-900">
+                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">1</span>
+                        <span>Show Band</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-snug">Show uncut band &amp; QR code clearly.</p>
                     </div>
-                    <div>
-                      <strong>2. Pack the Envelope:</strong> Without cutting or pausing the video, place the wristband
-                      directly inside your courier envelope.
+
+                    <div className="bg-white border border-slate-200 rounded-lg p-2.5 text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-blue-900">
+                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">2</span>
+                        <span>Pack Envelope</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-snug">Place band inside envelope without cutting video.</p>
                     </div>
-                    <div>
-                      <strong>3. Seal the Package:</strong> Show yourself sealing the envelope completely on camera.
+
+                    <div className="bg-white border border-slate-200 rounded-lg p-2.5 text-xs space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-blue-900">
+                        <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">3</span>
+                        <span>Seal On Camera</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 leading-snug">Seal courier envelope completely on camera.</p>
                     </div>
                   </div>
 
-                  {/* Red Warning Banner */}
-                  <div className="flex items-center gap-2 p-2.5 bg-red-50 border border-red-200 rounded text-[11px] text-red-800 font-semibold">
-                    <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
-                    <span>Note: Videos with cuts, edits, or transitions will result in immediate claim rejection. Our hub team will match the sealed package in your video to the package delivered by the courier.</span>
+                  {/* Gentle reassurance notice */}
+                  <div className="flex items-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-900">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Please ensure the video has no cuts or transitions so your claim verifies instantly.</span>
                   </div>
 
                   {/* Video Upload Button */}
@@ -1334,18 +1443,18 @@ function TixsuranceContent() {
                     className="hidden"
                   />
                   <div className="border border-slate-300 rounded-lg p-3 bg-white flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                      <Camera className="w-4 h-4 text-blue-600" />
-                      <span className={localVideoFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}>
-                        {localVideoFile ? localVideoFile.name : 'No video selected — Upload packaging video'}
+                    <div className="flex items-center gap-2 text-xs text-slate-600 min-w-0">
+                      <Camera className="w-4 h-4 text-blue-600 shrink-0" />
+                      <span className={`truncate ${localVideoFile ? 'font-bold text-slate-900' : 'text-slate-400 italic'}`}>
+                        {localVideoFile ? localVideoFile.name : 'Attach Packaging Video'}
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => localVideoRef.current?.click()}
-                      className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider"
+                      className="px-4 py-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded uppercase tracking-wider shrink-0 transition-colors"
                     >
-                      {localVideoFile ? 'CHANGE VIDEO' : 'UPLOAD VIDEO'}
+                      {localVideoFile ? 'CHANGE' : 'UPLOAD VIDEO'}
                     </button>
                   </div>
                 </div>
@@ -1395,7 +1504,9 @@ function TixsuranceContent() {
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="w-5 h-5 text-amber-400" />
                   <h1 className="font-extrabold text-base md:text-lg tracking-wider">
-                    TIXSURANCE - FILE YOUR CLAIM
+                    <span className="text-cyan-400 font-black">TIX</span>
+                    <span className="text-white font-extrabold">SURANCE</span>
+                    <span className="text-blue-100 font-medium"> - FILE YOUR CLAIM</span>
                   </h1>
                 </div>
                 <p className="text-xs text-blue-100/90 mt-0.5">Outstation Corridor (&gt;100km Radius) with Stay &amp; Travel</p>
@@ -1522,6 +1633,21 @@ function TixsuranceContent() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Helpline & Courier Assistance for Outstation Claims */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Phone className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span>Courier Coordination &amp; Claim Inquiries Helpline:</span>
+                  </div>
+                  <a
+                    href="tel:+919004264161"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-blue-400/50 text-blue-700 font-mono font-bold text-sm shadow-sm hover:bg-blue-50 transition-colors whitespace-nowrap self-start sm:self-auto"
+                  >
+                    <span>📞</span>
+                    <span className="whitespace-nowrap tracking-wider">+91 90042 64161</span>
+                  </a>
                 </div>
 
                 {/* Legal Declaration */}
