@@ -8,6 +8,7 @@ import {
   UploadCloud,
   LayoutDashboard,
   ShieldAlert,
+  ShieldCheck,
   LogOut,
   User,
   Users,
@@ -60,11 +61,13 @@ export function Navbar({ user }: NavbarProps) {
   const navLinks = [
     { href: '/dashboard', label: 'My Tickets', icon: LayoutDashboard },
     { href: '/upload', label: 'Upload & Scan', icon: UploadCloud },
+    { href: '/tixsurance', label: 'Tixsurance Shield', icon: ShieldCheck },
   ];
 
   if (user?.role === 'admin') {
     navLinks.push(
       { href: '/admin/dashboard', label: 'Admin Command', icon: ShieldAlert },
+      { href: '/admin/claims', label: 'Claims Forensics', icon: Shield },
       { href: '/admin/passengers', label: 'Traveler Intelligence', icon: Users }
     );
   }

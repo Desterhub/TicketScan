@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Navbar } from '@/components/ui/Navbar';
 import { TicketCard } from '@/components/ticket-card/TicketCard';
 import { PassengerManifestTable } from '@/components/ticket/PassengerManifestTable';
+import { TicketInsuranceCard } from '@/components/tixsurance/TicketInsuranceCard';
 import { Ticket, TransportMode, BookingStatus } from '@/types/database';
 import {
   FileText,
@@ -183,6 +184,18 @@ function TicketDetailContent() {
 
         {/* Boarding Pass Card */}
         <TicketCard ticket={ticket} onEdit={() => setEditing(true)} />
+
+        {/* Tixsurance Protection Shield */}
+        <TicketInsuranceCard
+          bookingId={ticket.pnr_booking_id || ticket.id}
+          ticketFare={
+            ticket.raw_extraction_json?.total_fare
+              ? parseFloat(String(ticket.raw_extraction_json.total_fare).replace(/[^\d.]/g, '')) || 3600
+              : 3600
+          }
+          origin={ticket.boarding_place || undefined}
+          destination={ticket.destination_place || undefined}
+        />
 
         {/* Inline Edit Form */}
         {editing && (

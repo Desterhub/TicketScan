@@ -13,6 +13,7 @@ import {
   Download,
   Key,
   Shield,
+  ShieldAlert,
   Loader2,
   ArrowRight,
   BarChart3,
@@ -109,6 +110,14 @@ export default function AdminDashboardPage() {
             >
               <Users className="w-3.5 h-3.5 text-emerald-400" />
               <span>Traveler Intelligence</span>
+            </Link>
+
+            <Link
+              href="/admin/claims"
+              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-500/40 text-amber-300 text-xs font-mono flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+              <span>Tixsurance Claims</span>
             </Link>
 
             <button
@@ -248,8 +257,8 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Admin Navigation Hub: Users, Travelers & Tickets */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Admin Navigation Hub: Users, Travelers, Claims & Tickets */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           <Link
             href="/admin/passengers"
             className="p-6 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/50 transition group space-y-4"
@@ -269,6 +278,29 @@ export default function AdminDashboardPage() {
               </h4>
               <p className="text-xs text-slate-400 mt-1">
                 Track individual travelers, cross-ticket history, split fare shares, and cumulative expenditures.
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/claims"
+            className="p-6 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-amber-500/50 transition group space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 group-hover:scale-105 transition">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-amber-400 group-hover:translate-x-1 transition" />
+            </div>
+            <div>
+              <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                <span>Tixsurance Claims</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-amber-500/20 text-amber-300 uppercase font-bold">
+                  12H Hub
+                </span>
+              </h4>
+              <p className="text-xs text-slate-400 mt-1">
+                Audit 12-hour physical wristband returns, continuous packaging videos, and outstation stay/travel cancellations.
               </p>
             </div>
           </Link>
