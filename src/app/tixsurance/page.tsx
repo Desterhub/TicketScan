@@ -19,14 +19,91 @@ import {
   Building2,
   Calendar,
   X,
+  Menu,
+  ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
 import { evaluateGeofenceRadius, calculatePremiums, TIXSURANCE_HUB, DEFAULT_EVENT_VENUE } from '@/lib/tixsurance';
+
+// Navigation configuration for the Slidebar
+const SCREENS = [
+  {
+    id: 'ticket' as const,
+    step: '1',
+    category: 'Protection Onboarding',
+    title: '1 - Ticket Protection',
+    badge: 'Phase 1',
+    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    description: 'Zero-Fraud Event Ticket Shield, Attendee KYC & 5% checkout / 7% grace policy',
+    icon: ShieldCheck,
+  },
+  {
+    id: 'stay' as const,
+    step: '2',
+    category: 'Protection Onboarding',
+    title: '2 - Stay Shield',
+    badge: 'Phase 2',
+    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+    description: 'Hotel, hostel & homestay cancellation protection buffer',
+    icon: Hotel,
+  },
+  {
+    id: 'travel' as const,
+    step: '3',
+    category: 'Protection Onboarding',
+    title: '3 - Travel Shield',
+    badge: 'Phase 3',
+    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    description: 'Flight, train & intercity transit safeguarding',
+    icon: Plane,
+  },
+  {
+    id: 'claim_local' as const,
+    step: '4',
+    category: 'Emergency Claims Filing',
+    title: '4 - Claim (Local ≤100km)',
+    badge: 'Rapid 12H Hub',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    description: 'Within 100km radius: 12-hour rapid drop-off at Empressa 14 Hub',
+    icon: MapPin,
+  },
+  {
+    id: 'claim_outstation' as const,
+    step: '5',
+    category: 'Emergency Claims Filing',
+    title: '5 - Claim (Outstation >100km)',
+    badge: 'Courier Forensic',
+    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    description: 'Beyond 100km: Courier tracking, packaging video audit & transit cover',
+    icon: ShieldAlert,
+  },
+];
 
 function TixsuranceContent() {
   const searchParams = useSearchParams();
 
   // Screen tabs matching Canva design screens
   const [activeScreen, setActiveScreen] = useState<'ticket' | 'stay' | 'travel' | 'claim_local' | 'claim_outstation'>('ticket');
+  const [slidebarOpen, setSlidebarOpen] = useState(false);
+
+  // Close slidebar on Escape key & manage body scroll
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSlidebarOpen(false);
+      }
+    };
+    if (slidebarOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [slidebarOpen]);
 
   // Screen 1: Ticket Onboarding State (Blank clean slate - no fake autofill)
   const [bookingId, setBookingId] = useState(searchParams.get('bookingId') || '');
@@ -312,68 +389,238 @@ function TixsuranceContent() {
             </div>
           </div>
 
-          {/* Screen Switcher Tabs matching Canva screens */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+          {/* Slidebar Trigger Button (Replaces cluttered horizontal overflow tabs) */}
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setActiveScreen('ticket')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                activeScreen === 'ticket'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400'
-                  : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
-              }`}
+              type="button"
+              onClick={() => setSlidebarOpen(true)}
+              className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-blue-500/50 text-slate-200 transition-all shadow-sm group active:scale-[0.98]"
+              title="Open Navigation Slidebar"
+              aria-label="Open Navigation Slidebar"
             >
-              1 - Ticket Protection
-            </button>
-            <button
-              onClick={() => setActiveScreen('stay')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                activeScreen === 'stay'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400'
-                  : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              2 - Stay Shield
-            </button>
-            <button
-              onClick={() => setActiveScreen('travel')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                activeScreen === 'travel'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400'
-                  : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              3 - Travel Shield
-            </button>
-            <button
-              onClick={() => setActiveScreen('claim_local')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                activeScreen === 'claim_local'
-                  ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30 ring-1 ring-amber-400'
-                  : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              4 - Claim (Local ≤100km)
-            </button>
-            <button
-              onClick={() => setActiveScreen('claim_outstation')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                activeScreen === 'claim_outstation'
-                  ? 'bg-amber-600 text-white shadow-md shadow-amber-600/30 ring-1 ring-amber-400'
-                  : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              5 - Claim (Outstation &gt;100km)
+              <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Menu className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <span>Navigation</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                </div>
+                <div className="text-xs font-bold text-white whitespace-nowrap">
+                  {SCREENS.find((s) => s.id === activeScreen)?.title || '1 - Ticket Protection'}
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-transform ml-1 hidden sm:block" />
             </button>
           </div>
 
           {/* Inquiry Helpline Phone Badge - +91 90042 64161 */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/80 border border-blue-500/40 text-blue-200 text-xs font-mono">
-            <Phone className="w-3.5 h-3.5 text-blue-400" />
-            <span>Inquiries: </span>
+          <a
+            href="tel:+919004264161"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-950/80 border border-blue-500/40 text-blue-200 text-xs font-mono hover:bg-blue-900/60 transition-colors"
+          >
+            <Phone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <span className="hidden sm:inline">Inquiries: </span>
             <strong className="text-white">+91 90042 64161</strong>
-          </div>
+          </a>
         </div>
       </div>
+
+      {/* ========================================================
+          SLIDEBAR (DRAWER): SLIDES OUT WHEN NEEDED & SLIDES IN
+      ======================================================== */}
+      {/* Backdrop Blur Overlay */}
+      <div
+        className={`fixed inset-0 bg-black/70 backdrop-blur-sm z-50 transition-opacity duration-300 ${
+          slidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setSlidebarOpen(false)}
+        aria-hidden="true"
+      />
+
+      {/* Slide-out Navigation Drawer from Left */}
+      <aside
+        className={`fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-slate-950 border-r border-slate-800 shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out ${
+          slidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tixsurance Navigation Slidebar"
+      >
+        {/* Drawer Header */}
+        <div className="p-4 sm:p-5 border-b border-slate-800/90 flex items-center justify-between bg-slate-900/60">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20">
+              <ShieldCheck className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-base tracking-wider text-white">TIXSURANCE™</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                  SLIDEBAR
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">Navigation &amp; Claims Hub</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSlidebarOpen(false)}
+            className="w-8 h-8 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors border border-slate-700/60"
+            aria-label="Close navigation slidebar"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Drawer Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-5">
+          {/* Geofence quick indicator */}
+          <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
+              <div>
+                <div className="font-bold text-slate-200">Active Geofence</div>
+                <div className="text-[11px] text-slate-400">~{geofence.distanceKm} km from venue</div>
+              </div>
+            </div>
+            <span
+              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                geofence.policyType === 'LOCAL'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+              }`}
+            >
+              {geofence.policyType === 'LOCAL' ? '≤100km Local' : '>100km Outstation'}
+            </span>
+          </div>
+
+          {/* Section 1: Protection Modules */}
+          <div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 px-1 flex items-center justify-between">
+              <span>Protection Onboarding</span>
+              <span className="text-[10px] font-mono text-blue-400">Phase 1 - 3</span>
+            </div>
+            <div className="space-y-2">
+              {SCREENS.slice(0, 3).map((screen) => {
+                const Icon = screen.icon;
+                const isSelected = activeScreen === screen.id;
+                return (
+                  <button
+                    key={screen.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveScreen(screen.id);
+                      setSlidebarOpen(false);
+                    }}
+                    className={`w-full text-left p-3 rounded-xl transition-all border flex items-start gap-3 group ${
+                      isSelected
+                        ? 'bg-blue-600/15 border-blue-500 text-white shadow-md shadow-blue-900/20'
+                        : 'bg-slate-900/70 border-slate-800/80 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/40'
+                          : 'bg-slate-800 text-slate-400 group-hover:text-blue-400 group-hover:bg-slate-700'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <span className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                          {screen.title}
+                        </span>
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded border ${screen.badgeColor}`}>
+                          {screen.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{screen.description}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 2: Emergency Claims Modules */}
+          <div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 px-1 flex items-center justify-between">
+              <span>Emergency Claim Filing</span>
+              <span className="text-[10px] font-mono text-amber-400">Phase 4 - 5</span>
+            </div>
+            <div className="space-y-2">
+              {SCREENS.slice(3, 5).map((screen) => {
+                const Icon = screen.icon;
+                const isSelected = activeScreen === screen.id;
+                return (
+                  <button
+                    key={screen.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveScreen(screen.id);
+                      setSlidebarOpen(false);
+                    }}
+                    className={`w-full text-left p-3 rounded-xl transition-all border flex items-start gap-3 group ${
+                      isSelected
+                        ? 'bg-amber-600/15 border-amber-500 text-white shadow-md shadow-amber-900/20'
+                        : 'bg-slate-900/70 border-slate-800/80 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                        isSelected
+                          ? 'bg-amber-600 text-white shadow-sm shadow-amber-500/40'
+                          : 'bg-slate-800 text-slate-400 group-hover:text-amber-400 group-hover:bg-slate-700'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <span className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                          {screen.title}
+                        </span>
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded border ${screen.badgeColor}`}>
+                          {screen.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">{screen.description}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Drawer Footer with Inquiries helpline & close button */}
+        <div className="p-4 border-t border-slate-800/90 bg-slate-900/80 space-y-3">
+          <a
+            href="tel:+919004264161"
+            className="flex items-center gap-3 p-3 rounded-xl bg-blue-950/60 border border-blue-500/40 hover:bg-blue-900/50 transition-colors text-left"
+          >
+            <div className="w-8 h-8 rounded-lg bg-blue-600/30 flex items-center justify-center text-blue-400 shrink-0">
+              <Phone className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] font-semibold text-blue-300 uppercase tracking-wider">Helpline &amp; Inquiries</div>
+              <div className="text-xs font-bold text-white font-mono">+91 90042 64161</div>
+            </div>
+          </a>
+
+          <button
+            type="button"
+            onClick={() => setSlidebarOpen(false)}
+            className="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-colors flex items-center justify-center gap-2 border border-slate-700/80"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            <span>Slide Back In (Close)</span>
+          </button>
+        </div>
+      </aside>
 
       {/* Floating Toast Notification */}
       {notification && (
